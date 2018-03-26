@@ -1,0 +1,20 @@
+config:
+    renderer: markdown
+
+modules:
+  bootstrap-dev:
+    name: Bootstrap Project and CI
+  create-catalog:
+    name: Create a Spring Boot Microservice
+  config-management:
+    name: Configuration management with Spring Boot
+  bootstrap-prod:
+    name: Create Production Environment
+  release-prod:
+    name: Deploy New Version to Production
+  fault-tolerance:
+    name: Fault Tolerance and Service Resilience
+  test-automation:
+    name: Test Automation
+  next-steps:
+    name: Next Steps...

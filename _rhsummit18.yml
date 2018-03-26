@@ -1,0 +1,22 @@
+id: "cloudnative"
+name: "Getting Started with Cloud-Native Apps"
+
+content:
+  url: https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master
+
+vars:
+  OPENSHIFT_DOCS_BASE: "https://docs.openshift.com/container-platform/3.9"
+  OPENSHIFT_MASTER_URL: "http://192.168.1.100:8443"
+  OPENSHIFT_USERNAME: "developer"
+  OPENSHIFT_PASSWORD: "developer"
+  
+modules:
+  activate:
+  - bootstrap-dev
+  - create-catalog
+  - config-management
+  - bootstrap-prod
+  - release-prod
+  - fault-tolerance
+  - test-automation
+  - next-steps

@@ -1,0 +1,71 @@
+---
+- name: Deploy Infra Components for Cloud-Native Labs at Red Hat Summit 2018
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  vars:
+    lab_infra_project: lab-infra
+    user_gogs_admin: gogs
+    user_gogs_user: developer
+    user_gogs_password: openshift
+
+  tasks:
+    - include_role:
+        name: openshift_common_facts
+      tags: always
+
+    - name: create lab infra project
+      shell: "oc new-project {{ lab_infra_project }} --display-name='Lab Infra'"
+      ignore_errors: true
+      tags: always
+
+    # deploy nexus
+    - import_role:
+        name: openshift_sonatype_nexus
+      vars:
+        project_name: "{{ lab_infra_project }}"
+        nexus_image_version: 3.7.1
+        nexus_max_memory: 6Gi
+      tags: nexus
+
+    # deploy gogs
+    - set_fact:
+        gogs_hostname: gogs-{{ lab_infra_project }}.{{ apps_hostname_suffix }}
+      tags: always
+
+    - import_role:
+        name: openshift_gogs
+      vars:
+        project_name: "{{ lab_infra_project }}"
+        gogs_route: "{{ gogs_hostname }}"
+        gogs_image_version: 0.11.34
+        gogs_admin_user: "{{ user_gogs_admin }}"
+        gogs_admin_password: "{{ user_gogs_password }}"
+        gogs_user: "{{ user_gogs_user }}"
+        gogs_password: "{{ user_gogs_password }}"
+        clean_deploy: true
+      tags: gogs
+
+    # deploy guides
+    - import_role:
+        name: openshift_workshopper
+      vars:
+        project_name: "{{ lab_infra_project }}"
+        workshopper_content_url_prefix: "https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master"
+        workshopper_workshop_urls: "https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master/_rhsummit18.yml"
+        workshopper_env_vars:
+          PROJECT_SUFFIX: ""
+          GOGS_URL: http://{{ gogs_hostname }}
+          OPENSHIFT_DOCS_BASE: "https://docs.openshift.com/container-platform/3.9"
+      tags: guides
+
+    # deploy eclipse che
+    - import_role:
+        name: openshift_eclipse_che
+      vars:
+        project_name: "{{ lab_infra_project }}"
+        che_version: "6.3.0"
+        route_suffix: "{{ apps_hostname_suffix }}"
+      tags: eclipse-che
+
+    

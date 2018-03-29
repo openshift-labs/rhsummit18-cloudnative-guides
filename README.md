@@ -1,5 +1,6 @@
-# Red Hat Summit 2018: Getting Started with Cloud-Native Applications Lab Guide
+# Red Hat Summit 2018: <br/>Getting Started with Cloud-Native Applications Lab Guide
 
+Lab guides for the Cloud-Native Lab at Red Hat Summit 2018
 
 ## Deploy On OpenShift
 

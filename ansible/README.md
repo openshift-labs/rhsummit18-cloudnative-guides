@@ -49,9 +49,3 @@ Tips
   ```
   oc adm policy add-cluster-role-to-user cluster-admin admin
   ```
-
-* Create a number of persistent volumes, if none already exist on the cluster
-
-  ```
-  
-  ```

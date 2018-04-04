@@ -23,11 +23,8 @@ ansible-galaxy install -r requirements.yml
 ansible-playbook init.yml 
 ```
 
-For MAC OS X Users
--------------------
-
-Know Issues and work arounds:
-
-* Running this with the default python that is part of mac os x will fail, because it cannot verify the certificate to github.com. See https://blog.bearandgiraffe.com/ansible-github-and-a-failed-to-validate-the-ssl-certificate-story-a8a10ea17512 for more details on how to upgrade the ansible to use a later version of python.
-* The ansible galaxy roles requires `jmespath` python package. To install it run: `sudo pip3 install jmespath`
+Troubleshooting 
+---------------
+* Mac OS X users need to upgrade the default Python installed to avoid certificate issues with GitHub. See https://blog.bearandgiraffe.com/ansible-github-and-a-failed-to-validate-the-ssl-certificate-story-a8a10ea17512 for more details on how to upgrade the ansible to use a later version of python.
+* The Ansible Galaxy roles requires `jmespath` python package on Mac OS X. To install it run: `sudo pip3 install jmespath`
 

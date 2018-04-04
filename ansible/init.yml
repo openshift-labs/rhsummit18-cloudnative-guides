@@ -68,4 +68,111 @@
         route_suffix: "{{ apps_hostname_suffix }}"
       tags: eclipse-che
 
+    - name: wait for eclipse che to be running
+      uri:
+        url: http://che-{{ lab_infra_project }}.{{ apps_hostname_suffix }}/api/
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: "30"
+      delay: "10"
+      tags: eclipse-che
+
+    - name: create custom stack for jdk and openshift cli
+      uri:
+        url: http://che-{{ lab_infra_project }}.{{ apps_hostname_suffix }}/api/stack
+        method: POST
+        body: |
+          {
+            "name": "Java RH Summit",
+            "description": "Java JDK Stack on CentOS for Red Hat Summit 2018 Labs",
+            "scope": "general",
+            "workspaceConfig": {
+              "environments": {
+                "default": {
+                  "recipe": {
+                    "type": "dockerimage",
+                    "content": "siamaksade/centos_jdk8"
+                  },
+                  "machines": {
+                    "dev-machine": {
+                      "env": {},
+                      "servers": {
+                        "8080/tcp": {
+                          "attributes": {},
+                          "protocol": "http",
+                          "port": "8080"
+                        },
+                        "8000/tcp": {
+                          "attributes": {},
+                          "protocol": "http",
+                          "port": "8000"
+                        }
+                      },
+                      "volumes": {},
+                      "installers": [
+                        "org.eclipse.che.exec",
+                        "org.eclipse.che.terminal",
+                        "org.eclipse.che.ws-agent"
+                      ],
+                      "attributes": {
+                        "memoryLimitBytes": "2147483648"
+                      }
+                    }
+                  }
+                }
+              },
+              "commands": [
+                {
+                  "commandLine": "mvn clean install -f ${current.project.path}",
+                  "name": "build",
+                  "type": "mvn",
+                  "attributes": {
+                    "goal": "Build",
+                    "previewUrl": ""
+                  }
+                }
+              ],
+              "projects": [],
+              "defaultEnv": "default",
+              "name": "default",
+              "links": []
+            },
+            "components": [
+              {
+                "version": "---",
+                "name": "CentOS"
+              },
+              {
+                "version": "1.8.0_45",
+                "name": "JDK"
+              },
+              {
+                "version": "3.2.2",
+                "name": "Maven"
+              },
+              {
+                "version": "8.0.24",
+                "name": "Tomcat"
+              },
+              {
+                "version": "3.9.14",
+                "name": "OpenShift CLI"
+              }
+            ],
+            "creator": "ide",
+            "tags": [
+              "Java",
+              "JDK",
+              "Maven",
+              "Tomcat",
+              "CentOS",
+              "Git"
+            ],
+            "id": "java-centos-rhsummit18"
+          }
+        body_format: json
+        status_code: 200,201
+      tags: eclipse-che
+
     

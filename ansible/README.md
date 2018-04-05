@@ -42,6 +42,7 @@ Tips
   docker pull openshiftdemos/gogs:0.11.34
   docker pull eclipse/che:6.3.0
   docker pull osevg/workshopper:latest
+  docker pull siamaksade/centos_jdk8
   ```
 
 * Add an admin user to the cluster. Run the following as `system:admin`:

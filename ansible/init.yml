@@ -8,6 +8,7 @@
     user_gogs_admin: gogs
     user_gogs_user: developer
     user_gogs_password: openshift
+    openshift_cli: oc
 
   tasks:
     - include_role:
@@ -15,7 +16,7 @@
       tags: always
 
     - name: create lab infra project
-      shell: "oc new-project {{ lab_infra_project }} --display-name='Lab Infra'"
+      shell: "{{ openshift_cli }} new-project {{ lab_infra_project }} --display-name='Lab Infra'"
       ignore_errors: true
       tags: always
 
@@ -124,12 +125,21 @@
               },
               "commands": [
                 {
-                  "commandLine": "mvn clean install -f ${current.project.path}",
+                  "commandLine": "mvn clean install -f ${current.project.path} -s ${current.project.path}/.settings.xml",
                   "name": "build",
                   "type": "mvn",
                   "attributes": {
                     "goal": "Build",
                     "previewUrl": ""
+                  }
+                },
+                {
+                  "commandLine": "mvn spring-boot:run -f ${current.project.path} -s ${current.project.path}/.settings.xml",
+                  "name": "run spring-boot",
+                  "type": "mvn",
+                  "attributes": {
+                    "goal": "Run",
+                    "previewUrl": "${server.8080/tcp}"
                   }
                 }
               ],

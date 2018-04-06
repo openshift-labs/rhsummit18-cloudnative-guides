@@ -3,17 +3,17 @@ config:
 
 modules:
   bootstrap-dev:
-    name: Bootstrap Project and CI
+    name: Setup Development Environment
   create-catalog:
-    name: Create a Spring Boot Microservice
+    name: Create a Spring Boot Service
   config-management:
-    name: Configuration management with Spring Boot
+    name: Externalise Configuration
   bootstrap-prod:
     name: Create Production Environment
   release-prod:
     name: Deploy New Version to Production
   fault-tolerance:
-    name: Fault Tolerance and Service Resilience
+    name: Fault Tolerance and Resilience
   test-automation:
     name: Test Automation
   next-steps:

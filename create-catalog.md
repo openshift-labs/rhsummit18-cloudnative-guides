@@ -1,4 +1,4 @@
-## Create a Spring Boot Microservice
+## Create a Spring Boot Service
 
 In this step you are going to create our catalog service as a microservice. The point of this lab is to experience how a developer can work with OpenShift and Red Hat Middleware without any previous knowledge of OpenShift and Cloud native development.
 

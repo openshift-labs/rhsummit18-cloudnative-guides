@@ -30,3 +30,4 @@ $ docker run -p 8080:8080 -v $(pwd):/app-data \
 
 Go to http://localhost:8080 on your browser to see the rendered workshop content. You can modify the lab instructions 
 and refresh the page to see the latest changes.
+

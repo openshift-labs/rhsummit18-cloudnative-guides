@@ -125,12 +125,21 @@
               },
               "commands": [
                 {
-                  "commandLine": "mvn clean install -f ${current.project.path}",
+                  "commandLine": "mvn clean install -f ${current.project.path} -s ${current.project.path}/.settings.xml",
                   "name": "build",
                   "type": "mvn",
                   "attributes": {
                     "goal": "Build",
                     "previewUrl": ""
+                  }
+                },
+                {
+                  "commandLine": "mvn spring-boot:run -f ${current.project.path} -s ${current.project.path}/.settings.xml",
+                  "name": "run spring-boot",
+                  "type": "mvn",
+                  "attributes": {
+                    "goal": "Run",
+                    "previewUrl": "${server.8080/tcp}"
                   }
                 }
               ],

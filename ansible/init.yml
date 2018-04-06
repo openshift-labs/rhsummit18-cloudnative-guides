@@ -93,7 +93,7 @@
                 "default": {
                   "recipe": {
                     "type": "dockerimage",
-                    "content": "siamaksade/centos_jdk8"
+                    "content": "siamaksade/che_centos_jdk8:spring-boot-dep"
                   },
                   "machines": {
                     "dev-machine": {

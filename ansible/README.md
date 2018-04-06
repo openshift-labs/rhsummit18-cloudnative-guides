@@ -36,8 +36,11 @@ Tips
 
   ```
   docker pull registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift:1.2
+  dockerpull registry.access.redhat.com/rhscl/nodejs-4-rhel7:latest
   docker pull registry.access.redhat.com/openshift3/jenkins-2-rhel7:latest
   docker pull registry.access.redhat.com/openshift3/jenkins-slave-maven-rhel7:latest
+  docker pull registry.access.redhat.com/rhscl/postgresql-95-rhel7:latest
+  docker pull registry.access.redhat.com/rhscl/postgresql-96-rhel7:latest
   docker pull sonatype/nexus3:3.7.1
   docker pull openshiftdemos/gogs:0.11.34
   docker pull eclipse/che:6.3.0

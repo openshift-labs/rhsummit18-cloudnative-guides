@@ -6,13 +6,14 @@ content:
 
 vars:
   OPENSHIFT_DOCS_BASE: "https://docs.openshift.com/container-platform/3.9"
-  OPENSHIFT_MASTER_URL: "http://192.168.1.100:8443"
+  OPENSHIFT_MASTER_URL: "OPENSHIFT-MASTER-URL"
   OPENSHIFT_USERNAME: "developer"
   OPENSHIFT_PASSWORD: "openshift"
   PROJECT_SUFFIX: ""
   GIT_USER: "developer"
   GIT_PASSWORD: "openshift"
-  GIT_HOSTNAME: "gogs-lab-infra.192.168.1.100.nip.io"
+  GIT_HOSTNAME: "GIT-HOSTNAME"
+  ECLIPSE_CHE_URL: "ECLIPSE-CHE-URL"
 
   
 modules:

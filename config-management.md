@@ -9,23 +9,23 @@ if catalogs are immediately patched to remove the products.
 
 Add necessary dependencies to `pom.xml`:
 
-```xml
+~~~xml
 <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-kubernetes</artifactId>
 </dependency>
-```
+~~~
 
 Configure Spring Cloud Kubernetes to auto-update configuration when ConfigMap changes. In `src/main/resources/application-default.properties`:
 
-```
+~~~
 # enable configmap auto-reload
 spring.cloud.kubernetes.reload.enabled=true
-```
+~~~
 
 Add com.redhat.coolstore.service.StoreConfig:
 
-```java
+~~~java
 package com.redhat.coolstore.service;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -51,20 +51,20 @@ public class StoreConfig {
         return recalledProducts.contains(itemId);
     }
 }
-```
+~~~
 
 Modify `CatalogService` to filter products on the `recalledProducts` list:
 
 Add field:
 
-```java
+~~~java
     @Autowired
     StoreConfig storeConfig;
-```
+~~~
 
 Modify `readAll()` to filter out recalled products (add the one line):
 
-```java
+~~~java
     public List<Product> readAll() {
         List<Product> productList = repository.readAll();
         // remove recalled products
@@ -75,11 +75,11 @@ Modify `readAll()` to filter out recalled products (add the one line):
                 });
         return productList;
     }
-```
+~~~
 
 Add unit test to `src/test/java` in class `com.redhat.coolstore.service.RecalledProductsTest`:
 
-```java
+~~~java
 package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.Inventory;
@@ -141,25 +141,25 @@ public class RecalledProductsTest {
         assertThat(itemIds).doesNotContain("329299", "329199");
     }
 }
-```
+~~~
 
 Add `src/test/resources/test-recalled-products.properties` to support the unit test:
 
-```
+~~~
 # Comma-separated recalled product itemIds
 store.recalledProducts = 329199,329299
-```
+~~~
 
 run `mvn verify`, wait for:
 
-```console
+~~~console
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
 [INFO] Total time: 24.662 s
 [INFO] Finished at: 2018-04-06T16:17:33-04:00
 [INFO] Final Memory: 36M/327M
 [INFO] ------------------------------------------------------------------------
-```
+~~~
 
 Run locally:
 
@@ -187,9 +187,9 @@ Observe all products are present.
 
 Add a recalledProduct to the ConfigMap:
 
-```
+~~~
 store.recalledProducts = 329299
-```
+~~~
 
 Thanks to auto-refresh, this will immediately take effect. Observe on the catalog UI that the product is now missing
 (the UI auto-refreshes every 2 seconds so it should disappear within 2 seconds):

@@ -1,91 +1,6 @@
 ## Setup Development Environment
 
-
-#### Create Dev Environment
-
-Create a project for the Dev environment: 
-
-~~~shell
-oc new-project dev{{PROJECT_SUFFIX}} --display-name="Catalog DEV"
-
-# if using Che for oc commmands
-# oc policy add-role-to-user admin system:serviceaccount:lab-infra:default -n dev
-~~~
-
-#### Create Git Repository
-
-Go to Git server and login with your Git credentials:
-
-* Git server URL: `http://{{GIT_HOSTNAME}}`
-* Username: `{{ GIT_USER }}`
-* Password: `{{ GIT_PASSWORD }}`
-
-You need a git repository to store the source code for the Catalog service which you will 
-be creating throughout the following labs. Create a new repository by clicking on the plus 
-icon on the top navigation bar and then on **New Repository**.
-
-Specify `catalog` as **Repository Name** and click on **Create Repository** button, leaving 
-the rest with default values.
-
-![Git Server - Create Repo]({% image_path bootstrap-gogs-new-repo.png %}){:width="700px"}
-
-
-You will use Spring Boot for building the Catalog service. The skeleton project is available 
-on GitHub. You can now download the skeleton project from GitHub and import it into the 
-Catalog git repository you just created.
-
-Download the project skeleton from GitHub:
-
-~~~shell
-cd ~
-curl -L -o projects.tar.gz https://github.com/openshift-labs/rhsummit18-cloudnative-labs/archive/master.tar.gz
-tar xvfz projects.tar.gz
-mv rhsummit18-cloudnative-labs-master/* . 
-rm -rf rhsummit18-cloudnative-labs-master
-~~~
-
-Configure your name and email on git so that your commits are marked correctly with your name 
-in the version history of the changes on the git repository:
-
-~~~shell
-git config --global user.name "rhdeveloper"
-git config --global user.email "rhdeveloper@me.com"
-~~~
-
-Import the Catalog skeleton into your git repository:
-
-~~~shell
-cd catalog
-git init
-git add . --all
-git commit -m "initial add"
-git remote add origin http://{{GIT_USER}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git
-git push -u origin master
-~~~
-
-#### Deploy Catalog in DEV Environment
-
-OpenShift [Source-to-Image (S2I)]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/builds_and_image_streams.html#source-build) 
-capability can be used to build a container image from the source code. OpenShift S2I uses the supported 
-OpenJDK container image to build the final container image of the Catalog service using the Spring Boot uber-jar laid over the 
-certified OpenJDK container image that comes with the OpenShift platform.
-
-[Templates]({{OPENSHIFT_DOCS_BASE}}/dev_guide/templates.html) allow composing applications from multiple containers and deploy 
-them at once. The Catalog service needs a PostgreSQL database and therefore you can use a template that is already 
-created to deploy the Catalog skeleton project and a PostgreSQL database on OpenShift.
-
-Deploy the [Catalog template](https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml) 
-in the **Catalog DEV** project:
-
-~~~shell
-oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \ 
-      -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git \
-      -p MAVEN_MIRROR_URL=http://nexus.lab-infra.svc:8081/repository/maven-all-public
-~~~
-
-Notice that you can provide parameters to templates to for example customize the source code Git repository.
-
-#### Setup Development Workspace
+#### Setup Development Workspace in Eclipse Che
 
 You might be familiar with the Eclipse IDE which has been for years, one of the popoular IDEs for Java and other 
 programming languages. [Eclipse Che](https://www.eclipse.org/che/) is the next-generation Eclipse IDE which is web-based 
@@ -106,6 +21,10 @@ Click on **Open** to open the workspace and then on **Start** button to start th
 
 ![Eclipse Che Workspace]({% image_path bootstrap-che-start-workspace.png %}){:width="900px"}
 
+You can click on the left arrow icon to switch to the wide view:
+
+![Eclipse Che Workspace]({% image_path bootstrap-che-wide.png %}){:width="600px"}
+
 It takes a little while for the workspace to be ready. When it's ready, you will see a fully functional 
 Eclipse Che IDE running in your browser.
 
@@ -120,8 +39,12 @@ your name and email and click on **Save**
 
 ![Eclipse Che - Git Config]({% image_path bootstrap-che-git-profile.png %}){:width="600px"}
 
+The source code for the Catalog service is available in the git server running on OpenShift:<br/>
+http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git
+
 In the project explorer pane, click on **Import Projects...** link and enter the Catalog git 
-repository url: http://{{GIT_USER}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git
+repository url:<br/> `http://{{GIT_USER}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git`
+
 
 ![Eclipse Che - Import Project]({% image_path bootstrap-che-import.png %}){:width="720px"}
 
@@ -136,6 +59,58 @@ The catalog project is imported now into your workspace and is visible in the pr
 
 Build the Catalog project by clicking on the maven commands pallette if you can find the toolbar icon or alternatively  
 click on **Run** > **Commands Palette** > **Build** (there are more ways to do this, see if you can find them!)
+
+![Eclipse Che - Project]({% image_path bootstrap-che-build-palette.png %}){:width="600px"}
+
+
+#### Create Dev Environment
+
+You will use OpenShift CLI and OpenShift Web Console for interacting with OpenShift during these labs. OpenShift 
+Web Console is accessible at: <br/>
+{{ OPENSHIFT_MASTER_URL }}
+
+You can use the Eclipse Che **Terminal** panel to run OpenShift CLI commands that is what you will 
+use in the following labs whenever it's instructed to run an OpenShift CLI command.
+
+Use the OpenShift CLI to login into OpenShift with the following credentials:
+
+* Username: ``{{ OPENSHIFT_USERNAME }}``
+* Password: ``{{ OPENSHIFT_PASSWORD }}``
+
+~~~shell
+oc login {{ OPENSHIFT_MASTER_URL }}
+~~~
+
+![OpenShift CLI Login]({% image_path bootstrap-ocp-login.png %}){:width="900px"}
+
+Create a project for the Dev environment: 
+
+~~~shell
+oc new-project dev{{PROJECT_SUFFIX}} --display-name="Catalog DEV"
+~~~
+
+#### Deploy Catalog in DEV Environment
+
+OpenShift [Source-to-Image (S2I)]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/builds_and_image_streams.html#source-build) 
+capability can be used to build a container image from the source code. OpenShift S2I uses the supported 
+OpenJDK container image to build the final container image of the Catalog service using the Spring Boot uber-jar laid over the 
+certified OpenJDK container image that comes with the OpenShift platform.
+
+[Templates]({{OPENSHIFT_DOCS_BASE}}/dev_guide/templates.html) allow composing applications from multiple containers and deploy 
+them at once. The Catalog service needs a PostgreSQL database and therefore you can use a template that is already 
+created to deploy the Catalog skeleton project and a PostgreSQL database on OpenShift.
+
+Deploy the [Catalog template](https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml) 
+in the **Catalog DEV** project:
+
+Run the following in Eclipse Che **Terminal**:
+
+~~~shell
+oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \ 
+      -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git 
+~~~
+
+Notice that you can provide parameters to templates to for example customize the source code Git repository.
 
 
 #### Continuos Integration Pipeline
@@ -218,7 +193,7 @@ Make sure `Jenkinsfile` is checked. Enter a commit message to describe your chan
 
 ![Eclipse Che - Git Commit]({% image_path bootstrap-che-git-commit.png %}){:width="600px"}
 
-Go to your shell terminal and deploy a Jenkins container using the certified Jenkins image that 
+Go to Eclipse Che **Terminal** and run the following to deploy a Jenkins container using the certified Jenkins image that 
 comes with OpenShift.
 
 ~~~shell
@@ -252,9 +227,38 @@ spec:
 
 Try the pipeline!
 
-Add a webhook:
+#### Build and Test on Every Code Change
 
-* Go to catalog-build pipelien -> Congigurations tab and then copy the Generic Webhook URL
-* Go to Gogs > catalog repo > Settings > Webhook and click on Add Webhook > Gogs
-* Paste the webhook url in the Payload URL and then click on Add Webhook button
-* Test the webhook by clicking on it and then Test Delivery
+Manually triggering the deployment pipeline to run is useful but the real goal is to be able 
+to build and test the catalog service on every change in code or configuration and deploy it into 
+the development environment.
+
+In order to automate triggering the pipeline, you can define a webhook on your Git repository to 
+notify OpenShift on every commit that is made to the Git repository and trigger a pipeline execution.
+
+In the OpenShift Web Console go to **Builds** > **Pipelines** and then click on the `catalog-build` pipeline. 
+On the **Configurations** tab copy the **Generic Webhook URL**:
+
+![Pipeline Webhook]({% image_path bootstrap-pipeline-webhook.png %}){:width="900px"}
+
+
+Now go to the Git server web in your browser and login with your Git credentials:
+
+* Git Server Web: `http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git`
+* Git Username: `{{GIT_USERNAME}}`
+* Git Password: `{{GIT_PASSWORD}}`
+
+
+Click on the `catalog` repository and then on **Settings**
+
+![Git Repository Settings]({% image_path bootstrap-gogs-settings.png %}){:width="900px"}
+
+Click on **Webhooks** and then on **Add Webhook** > **Gogs**. Paste the pipeline generic webhook url 
+you copied into the **Payload URL** textbox and then click on **Add Webhook**.
+
+The webhook is added now and will trigger the pipeline to run on every push to the `catalog` git 
+repository.
+
+You can test the webhook by clicking on the webhook and then on **Test Delivery** button.
+
+Well done! You are now ready to proceed to the next lab.

@@ -1,14 +1,44 @@
 ## Create a Spring Boot Service
 
-The first thing we want to do to ensure that our oc command line tools was installed and successfully added to our path is to log in to the OpenShift environment that has been provided for this Roadshow session. In order to log in, we will use the oc command and then specify the server that we want to authenticate to. Issue the following command:
+In this step you are going to create our catalog service as a microservice. The point of this lab is to experience how a developer can work with OpenShift and Red Hat Middleware without any previous knowledge of OpenShift and Cloud native development.
 
-~~~shell
-$ oc login {{OPENSHIFT_MASTER_URL}}
-~~~
+### Fork and checkout the base project
 
-Enter the username and password provided to you by the instructor:
+Open Gogs web client and login as developer/developer
 
-* Username: {{OPENSHIFT_USERNAME}}
-* Password: {{OPENSHIFT_PASSWORD}}
+TODO: Add a generated link to Gogs
 
-![OpenShift Login]({% image_path ocp-login.png %}){:width="900px"}
+Click on Repositories and the `Catalog` repo
+
+TODO: Add screen shot of gogs repos
+
+Click on **Fork**
+
+TODO: Add a screen shot of fork button
+
+Now, in your forked repository click on **Clone**
+
+Now, go to a terminal and run the following commmand replacing the `<repo-url>` with the copied URL.
+
+    $ git clone <repo-url>
+
+Finally, go into the catalog directory
+
+    $ cd catalog
+
+  
+### Test the project locally
+
+
+    $ mvn clean package
+    $ mvn spring-boot:run
+    $ curl http://localhost:8080/hello
+
+
+
+    
+
+
+
+
+

@@ -40,10 +40,10 @@ your name and email and click on **Save**
 ![Eclipse Che - Git Config]({% image_path bootstrap-che-git-profile.png %}){:width="600px"}
 
 The source code for the Catalog service is available in the git server running on OpenShift:<br/>
-http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git
+http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git
 
 In the project explorer pane, click on **Import Projects...** link and enter the Catalog git 
-repository url:<br/> `http://{{GIT_USER}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git`
+repository url:<br/> `http://{{GIT_USERNAME}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`
 
 
 ![Eclipse Che - Import Project]({% image_path bootstrap-che-import.png %}){:width="720px"}
@@ -107,7 +107,7 @@ Run the following in Eclipse Che **Terminal**:
 
 ~~~shell
 oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \ 
-      -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git 
+      -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git 
 ~~~
 
 Notice that you can provide parameters to templates to for example customize the source code Git repository.
@@ -213,7 +213,7 @@ spec:
   source:
     git:
       ref: master
-      uri: "http://{{ GIT_HOSTNAME }}/{{ GIT_USER }}/catalog.git"
+      uri: "http://{{ GIT_HOSTNAME }}/{{ GIT_USERNAME }}/catalog.git"
     type: Git
   strategy:
     jenkinsPipelineStrategy:
@@ -244,10 +244,9 @@ On the **Configurations** tab copy the **Generic Webhook URL**:
 
 Now go to the Git server web in your browser and login with your Git credentials:
 
-* Git Server Web: `http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git`
+* Git Server Web: [http://{{GIT_HOSTNAME}}](http://{{GIT_HOSTNAME}}/user/login){:target="_blank"}
 * Git Username: `{{GIT_USERNAME}}`
 * Git Password: `{{GIT_PASSWORD}}`
-
 
 Click on the `catalog` repository and then on **Settings**
 

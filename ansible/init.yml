@@ -93,7 +93,7 @@
                 "default": {
                   "recipe": {
                     "type": "dockerimage",
-                    "content": "siamaksade/centos_jdk8"
+                    "content": "siamaksade/che-centos-jdk8:spring-boot-dep"
                   },
                   "machines": {
                     "dev-machine": {
@@ -162,20 +162,20 @@
                 "name": "Maven"
               },
               {
-                "version": "8.0.24",
-                "name": "Tomcat"
+                "version": "2.4",
+                "name": "Ansible"
               },
               {
                 "version": "3.9.14",
                 "name": "OpenShift CLI"
-              }
+              },
             ],
             "creator": "ide",
             "tags": [
               "Java",
               "JDK",
               "Maven",
-              "Tomcat",
+              "Ansible",
               "CentOS",
               "Git"
             ],

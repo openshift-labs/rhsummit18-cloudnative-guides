@@ -16,7 +16,7 @@ oc new-project dev{{PROJECT_SUFFIX}} --display-name="Catalog DEV"
 
 Go to Git server and login with your Git credentials:
 
-* Git server URL: `http://{{GIT_HOSTNAME}}`
+* Git server URL: [{{GIT_HOSTNAME}}](http://{{GIT_HOSTNAME}}/user/login){:target="_blank"}
 * Username: `{{ GIT_USER }}`
 * Password: `{{ GIT_PASSWORD }}`
 
@@ -78,7 +78,7 @@ Deploy the [Catalog template](https://raw.githubusercontent.com/openshift-labs/r
 in the **Catalog DEV** project:
 
 ~~~shell
-oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \ 
+oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \
       -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USER}}/catalog.git \
       -p MAVEN_MIRROR_URL=http://nexus.lab-infra.svc:8081/repository/maven-all-public
 ~~~

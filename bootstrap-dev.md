@@ -1,6 +1,13 @@
 ## Setup Development Environment
+{:.no_toc}
 
-#### Setup Development Workspace in Eclipse Che
+In this lab you will configure you local development environment using Eclipse Che IDE and create 
+a build pipeline that build, tests and deploys a Spring Boot service on OpenShift.
+
+- TOC
+{:toc}
+
+#### Configure Development Workspace in Eclipse Che
 
 You might be familiar with the Eclipse IDE which has been for years, one of the popoular IDEs for Java and other 
 programming languages. [Eclipse Che](https://www.eclipse.org/che/) is the next-generation Eclipse IDE which is web-based 

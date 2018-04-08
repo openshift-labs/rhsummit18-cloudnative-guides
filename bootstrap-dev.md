@@ -168,15 +168,22 @@ pipeline {
       label 'maven'
   }
   stages {
+    stage('Verify') {
+      steps {
+        sh "cp .settings.xml ~/.m2/settings.xml"
+        sh "mvn verify"
+      }
+    }
     stage('Build JAR') {
       steps {
         sh "cp .settings.xml ~/.m2/settings.xml"
-        sh "mvn package"
+        sh "mvn clean package -Popenshift -DskipTests"
       }
     }
     stage('Archive JAR') {
       steps {
-        sh "mvn deploy -DskipTests"
+        //sh "mvn deploy -DskipTests"
+        echo "TODO: Deploy the file to the local Nexus repo"
       }
     }
     stage('Build Image') {

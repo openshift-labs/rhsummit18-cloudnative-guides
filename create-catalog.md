@@ -63,7 +63,8 @@ Next step is to create a java model that represents the product data. So you cre
 For detailed instructions see [here]().
 
 ### Create a service to access data.
-In Domain Driven Design (DDD) a *Repository* is definied as *"a mechanism for encapsulating storage, retrieval, and search behavior which emulates a collection of objects"*. So to access data from the database you decide to implement a `ProductRepository` class using `JdbcTemplate` based on KISS principle. Keep It Simple Stupid ;-)
+
+In Domain Driven Design (DDD) a *Repository* is definied as *"a mechanism for encapsulating storage, retrieval, and search behavior which emulates a collection of objects"*. So to access data from the database we will implement a `ProductRepository` class using `JdbcTemplate` based on KISS principle. Keep It Simple Stupid ;-)
 
 
 The full implementation looks like this:
@@ -226,12 +227,14 @@ You should now see a page that list the content of the product catalog like this
 
 |**INFO:** Even if you application is actually running in Eclipse Che on OpenShift we are actually not running a proper OpenShift managed application yet. This development flow is similar as if you where developing locally on you developer machine and testing locally before deploying to "real" server. This is a great way for you as a developer to test your own code changes before committing and pushing it to a shared repository.
 
+|**NOTE:** The current version of the application does not provide a inventory quantity number. We will look at that in the next section.
+
 ### Preparing our application for the Cloud native Platform.
 
 We now have a first version of our service that can run locally. However in order to deploy this we also have switch from the in-memory H2 database to using a proper PostgreSQL database. To do this this we will have to accomplish two things.
 
-1. Add a PostgreSQL database driver
-2. Configure Spring Data to use a PostgreSQL database running in Openshift.
+- [ ] Add a PostgreSQL database driver
+- [ ] Configure Spring Data to use a PostgreSQL database running in Openshift.
 
 To accomplish the first step all we have todo is to add a dependency to the `pom.xml`. However, if we do that it will also mean that we package the PostgreSQL even when running locally so in accordance with maven best practices we have already prepared the pom.xml for using profiles. Review the profile snippet from the `pom.xml` below:
 
@@ -290,7 +293,10 @@ As the snippet above shows we have two profiles; A **local** one that is activat
 
 So the first task is already accomplished. :-)
 
-For the second task we will have to update the `src/main/resources/application.properties` to include details on how to connect to the database like this:
+- [x] Add a PostgreSQL database driver
+- [ ] Configure Spring Data to use a PostgreSQL database running in Openshift.
+
+For the second task we will have to configure Spring to use postgres instead of h2 as a database. This would normally mean that we would update the `src/main/resources/application.properties` to include details on how to connect to the database like this:
 
 ~~~
 spring.datasource.url=jdbc:postgresql://catalog-database:5432/catalog
@@ -299,62 +305,35 @@ spring.datasource.password=<password>
 spring.datasource.driver-class-name=org.postgresql.Driver
 ~~~
 
-Luckely OpenShift has a nifty function called ConfigMaps` which allows us to mount files directly into containers, and the template that you used to setup the catalog database and catalog service etc actually already included that.
+However, before you go an update the application.properties. If you add this you can no longer test locally. We could solve that by adding environment specific configuration, but OpenShift has a nifty function called `ConfigMaps` which allows us to mount files directly into containers.
 
-In the template there was a `ConfigMap` declaration that looked like this:
+This means that we as developers don't have to change anything in our application to make it run on OpenShift.
 
-~~~yaml
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: catalog
-    labels:
-      app: coolstore
-      component: catalog
-  data:
-    application.properties: |-
-      spring.datasource.url=jdbc:postgresql://catalog-postgresql:5432/catalog
-      spring.datasource.username=${DB_USERNAME}
-      spring.datasource.password=${DB_PASSWORD}
-      spring.datasource.driver-class-name=org.postgresql.Driver
-~~~
+|**INFO:** As briefly mentioned in the text above we don't have to push that configuration into OpenShift and cloud instead really on different techniques from the Spring Configuration subsystem. Some developers do not like the fact that OpenShift override configuration and would prefer to keep that configuration closer to the code. Others prefer to store environment specific configurations, like database passwords an URLs outside of the application since they want to be able to update that without having to rebuild the application. Finally, not storing passwords in the code is a good security practice. Since our templates generates the database password etc and username it makes our life much simpler to have that configuration as part of the Cloud native platform rather than hard coded in a properties file in the application.
 
-|**NOTE:** the DB_USERNAME and DB_PASSWORD parameters in here comes from the template and will default be generated if not specified.
+We will discuss configuration management and `ConfigMaps` in more detail in another lab, but for now you can just trust that the template we have provided for you will take care of that configuration.
 
-We also have to tell the catalog container to use this `ConfigMap` and that is done in the `DeploymentConfig` where we declare the `ConfigMap` as a volume, like this:
+So the second step doesn't require anything either. :-)
 
-~~~yaml
-volumes:
-  - configMap:
-      name: catalog
-    name: volume-app-config
-~~~
+- [x] Add a PostgreSQL database driver
+- [x] Configure Spring Data to use a PostgreSQL database running in Openshift.
 
-And also in the `DeploymentConfig` we mount that volume as a directory in the container, like this:
-
-~~~yaml
-volumeMounts:
-  - mountPath: /app-config/
-      name: volume-app-config
-~~~
-
-Finally, also we need to tell the application to use this config file instead of the application.properties that we ship in the JAR. That is also done in the `DeploymentConfig` by setting an environment variable called `JAVA_ARGS` that will be added after after the run command for the container
-
-~~~yaml
-spec:
-  containers:
-  - env:
-    - name: JAVA_ARGS
-        value: '--spring.config.location=/app-config/application.properties'
-~~~
-
-So the second step is done as well. :-)
 
 That means that we are ready to deploy our application to the cloud native application platform, OpenShift. And since we have a Jenkins pipeline that will build and deploy this for us all we have todo is to commit and push our changes. So lets. Commit all our changes.
 
-
-
-
 ### Commit and push the first version of the application
 
+Commit all the changes and push all the changes by selecting **Git > Commit** from the menu.
 
+![Git Server - Create Repo]({% image_path create-catalog-commit-1.png %}){:width="200px"}
+
+Select all the changed or new files and check the box next to **Push committed changes to:** and then push **Commit**
+
+![Git Server - Create Repo]({% image_path create-catalog-commit-2.png %}){:width="600px"}
+
+Open the OpenShift [webconsole]({{OPENSHIFT_MASTER_URL}}/console/project/dev/browse/pipelines){:target="_blank"} and watch the pipeline build
+
+![Git Server - Create Repo]({% image_path create-catalog-pipeline.png %}){:width="700px"}
+
+### Summary
+Congratulations, you have managed to create the first version of our microservices. Pad yourself on the back and reflect a bit on how easy it was to do this using this integrated development environment and how easy it was to deploy it to OpenShift. In the next module we will look at how to do a service-to-service call.

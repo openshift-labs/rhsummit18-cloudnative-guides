@@ -214,6 +214,14 @@ comes with OpenShift.
 oc new-app jenkins-persistent
 ~~~
 
+Since the pipeline will control the build and deployment flow, you should disable 
+[the automatic deployment triggers]({{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers) 
+that OpenShift uses to automate the deployment process:
+
+~~~shell
+oc set triggers dc/catalog --manual -n dev{{PROJECT_SUFFIX}}
+~~~
+
 In the web console go to the **Catalog DEV** project. Click on **Add to Project** > **Import YAML/JSON** 
 and paste the following pipeline definition:
 

@@ -9,6 +9,8 @@
     user_gogs_user: developer
     user_gogs_password: openshift
     openshift_cli: oc
+    github_account: openshift-labs
+    github_ref: master
 
   tasks:
     - include_role:
@@ -47,6 +49,69 @@
         clean_deploy: true
       tags: gogs
 
+    - name: wait for gogs to be running
+      uri:
+        url: http://{{ gogs_hostname }}
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: "30"
+      delay: "10"
+      tags: gogs
+
+    - name: check if catalog git repository exists
+      uri:
+        url: http://{{ gogs_hostname }}/api/v1/repos/{{ user_gogs_user }}/catalog
+        user: "{{ user_gogs_user }}"
+        password: "{{ user_gogs_password }}"
+        force_basic_auth: true
+        status_code: 200,404
+      register: repo_result
+      tags: gogs
+
+    - name: create catalog git repository
+      uri:
+        url: http://{{ gogs_hostname }}/api/v1/user/repos
+        method: POST
+        body: '{"name": "catalog", "private": false}'
+        body_format: json
+        user: "{{ user_gogs_user }}"
+        password: "{{ user_gogs_password }}"
+        status_code: 200,201
+        force_basic_auth: true
+      when: repo_result.status != 200
+      tags: gogs
+
+    - name: create temporary git directory
+      tempfile:
+        state: directory
+        prefix: projects-git
+      register: git_dir
+      when: repo_result.status != 200
+      tags: gogs
+
+    - name: unarchive projects source archive
+      unarchive:
+        remote_src: yes
+        src: "https://github.com/{{ github_account }}/rhsummit18-cloudnative-labs/archive/{{ github_ref }}.zip"
+        dest: "{{ git_dir.path }}"
+      when: repo_result.status != 200
+      tags: gogs
+
+    - name: push catalog to git repository in Gogs
+      shell: |
+        git init
+        git remote add origin http://{{ user_gogs_user }}:{{ user_gogs_password }}@{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git
+        git add . --all
+        git config user.email "rhdeveloper@redhat.com"
+        git config user.name "rh-developer"
+        git commit -m "Initial add"
+        git push origin master
+      args:
+        chdir: "{{ git_dir.path }}/rhsummit18-cloudnative-labs-{{ github_ref }}/catalog"
+      when: repo_result.status != 200
+      tags: gogs
+
     # deploy guides
     - import_role:
         name: openshift_workshopper
@@ -65,7 +130,8 @@
         name: openshift_eclipse_che
       vars:
         project_name: "{{ lab_infra_project }}"
-        che_version: "6.3.0"
+        #che_version: "6.3.0"
+        che_version: "nightly"
         route_suffix: "{{ apps_hostname_suffix }}"
       tags: eclipse-che
 
@@ -125,7 +191,7 @@
               },
               "commands": [
                 {
-                  "commandLine": "mvn clean install -f ${current.project.path} -s ${current.project.path}/.settings.xml",
+                  "commandLine": "mvn install -f ${current.project.path} -s ${current.project.path}/.settings.xml",
                   "name": "build",
                   "type": "mvn",
                   "attributes": {
@@ -134,11 +200,29 @@
                   }
                 },
                 {
-                  "commandLine": "mvn spring-boot:run -f ${current.project.path} -s ${current.project.path}/.settings.xml",
-                  "name": "run spring-boot",
+                  "commandLine": "mvn clean install -f ${current.project.path} -s ${current.project.path}/.settings.xml",
+                  "name": "clean build",
                   "type": "mvn",
                   "attributes": {
+                    "goal": "Build",
+                    "previewUrl": ""
+                  }
+                },
+                {
+                  "commandLine": "mvn spring-boot:run -f ${current.project.path} -s ${current.project.path}/.settings.xml",
+                  "name": "run",
+                  "type": "custom",
+                  "attributes": {
                     "goal": "Run",
+                    "previewUrl": "${server.8080/tcp}"
+                  }
+                },
+                {
+                  "commandLine": "mvn spring-boot:run -f ${current.project.path} -s ${current.project.path}/.settings.xml -Drun.jvmArguments=\"-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005\"",
+                  "name": "debug",
+                  "type": "custom",
+                  "attributes": {
+                    "goal": "Debug",
                     "previewUrl": "${server.8080/tcp}"
                   }
                 }
@@ -168,7 +252,7 @@
               {
                 "version": "3.9.14",
                 "name": "OpenShift CLI"
-              },
+              }
             ],
             "creator": "ide",
             "tags": [
@@ -185,4 +269,25 @@
         status_code: 200,201
       tags: eclipse-che
 
-    
+    # validate cluster
+    - name: check openjdk image stream installed
+      shell: "{{ openshift_cli }} get is redhat-openjdk18-openshift -n openshift"
+      register: jdk_imagestream_result
+      ignore_errors: true
+      tags: validate
+
+    - name: display instructions to install openjdk image stream
+      debug:
+        msg:
+          - '### WARNING ###'
+          - 'OpenJDK image stream is not installed. Run the following as cluster admin:'
+          - '{{ openshift_cli }} create -n openshift -f https://raw.githubusercontent.com/openshift/openshift-ansible/release-3.9/roles/openshift_examples/files/examples/v3.9/xpaas-streams/jboss-image-streams.json'
+      when: jdk_imagestream_result|failed   
+      tags: validate     
+      
+    # populate nexus
+    - name: populate nexus
+      shell: "{{ openshift_cli }} new-build redhat-openjdk18-openshift:1.2~http://{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git -n {{ lab_infra_project }} -e MAVEN_MIRROR_URL=http://nexus.{{ lab_infra_project }}.svc:8081/repository/maven-all-public/"
+      register: jdk_imagestream_result
+      ignore_errors: true
+      tags: populate-nexus

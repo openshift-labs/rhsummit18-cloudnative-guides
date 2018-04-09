@@ -52,12 +52,13 @@ Let's modify our application to use it. We will use the [Spring Cloud Kubernetes
 project. Using this dependency, Spring Boot will search for a ConfigMap (by default with the same name as
 the application) to use as the source of application configuration during application bootstrapping and
 if enabled, triggers hot reloading of beans or Spring context when changes are detected on the ConfigMap.
-We'll use auto-reload later, but for now, add the following dependency to your `pom.xml`:
+We'll use auto-reload later, but for now, add the following dependency to your `pom.xml` beneath the existing
+dependencies (look for the `<!-- add additional dependencies -->` comment):
 
 ~~~xml
 <dependency>
     <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-kubernetes</artifactId>
+    <artifactId>spring-cloud-starter-kubernetes-config</artifactId>
 </dependency>
 ~~~
 
@@ -125,16 +126,16 @@ Once connected to the PostgreSQL container, run the following:
 > Run this command inside the Catalog PostgreSQL container, after opening a remote shell to it.
 
 ~~~sh
-psql -U catalog -c "select item_id, name, price from product"
+psql -U $POSTGRESQL_USER -d $POSTGRESQL_DATABASE -c "select itemId, name, price from catalog"
 ~~~
 
 You should see the seed data gets listed.
 
 ~~~
- item_id |            name             | price
+ itemid |            name             | price
 ----------------------------------------------
- 329299  | Red Fedora                  | 34.99
- 329199  | Forge Laptop Sticker        |   8.5
+ 329299 | Red Fedora                  | 34.99
+ 329199 | Forge Laptop Sticker        |   8.5
  ...
 ~~~
 
@@ -144,13 +145,22 @@ Exit the container shell.
 exit
 ~~~
 
+### Test the result on OpenShift
+
+  APPS_HOSTNAME_SUFFIX: "apps.GUID.generic.opentlc.com"
 
 Test the catalog running on OpenShift:
 
-`open http://catalog-dev.[OPENSHIFT_MASTER]`
+`open http://catalog-dev.{{APPS_HOSTNAME_SUFFIX}}`
 
 Observe all products are present!
 
 ### Congratulations!
 
-You've now got a quick way to alter service configuration without redeploying! Congratulations!
+You've now got a quick way to alter service configuration without redeploying! As the application moves
+through different environments (test, staging, production), it will pick up its configuration via a
+ConfigMap within each environment, rather than being re-compiled with the new configuration each time.
+
+This mechanism can also be used to alter business logic in addition to infrastructure (database, etc)
+configuration. We'll employ this later in in the Fault Tolerance exercise to do a custom feature toggle
+for our services.

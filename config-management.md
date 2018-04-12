@@ -1,158 +1,84 @@
-#### Configuration management with Spring Boot
+## Configuration management with Spring Boot
 
-In this scenario you will learn how to manage application configuration and how to
-provide application configuration external from the application itself. This is useful for
-separating environment-specific configuration and for supplying runtime changes to the business
-logic without redeploying. In this situation, the product catalog has some faulty products in it
-that must be removed quickly and temporarily to handle sitations where business can be lost
-if catalogs are immediately patched to remove the products.
+So far our catalog service has been using an in-memory H2 database. Although H2 is a
+convenient database to run locally on your laptop, it's in no ways appropriate for production
+or even integration tests. Since it's strongly recommended to use the same technology stack
+(operating system, JVM, middleware, database, etc) that is used in production across all environments,
+we will modify the Catalog service to use a PostgreSQL database instead of the H2 in-memory database.
 
-Add necessary dependencies to `pom.xml`:
+Fortunately, OpenShift supports stateful applications such as databases which required access to a
+persistent storage that survives the container itself. You can deploy databases on OpenShift and
+regardless of what happens to the container itself, the data is safe and can be used by the next
+database container.
+
+As part of this lab, a PostgreSQL database has already been deployed, which you can see:
+
+~~~console
+$ oc get pods
+NAME                         READY     STATUS    RESTARTS   AGE
+catalog-postgresql-1-kbs84   1/1       Running   0          2d
+~~~
+
+Our Spring Boot Catalog application configuration is provided via a properties filed called `application-default.properties`
+and can be overriden and [overlayed via multiple mechanisms](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html).
+
+In this scenario, you will configure the Catalog service which is based on Spring Boot to override the default
+H2 database configuration using alternative configuration values backed by an [OpenShift ConfigMap](https://docs.openshift.org/latest/dev_guide/configmaps.html).
+
+The ConfigMap has been created for you already, which supplies the necessary PostgreSQL configuration to be
+able to connect to the PostgreSQL database:
+
+~~~yaml
+% oc get configmap/catalog -o yaml
+apiVersion: v1
+data:
+  application.properties: |-
+    spring.datasource.url=jdbc:postgresql://catalog-postgresql:5432/catalog
+    spring.datasource.username=********
+    spring.datasource.password=********
+    spring.datasource.driver-class-name=org.postgresql.Driver
+    spring.jpa.hibernate.ddl-auto=create
+kind: ConfigMap
+metadata:
+    ...
+~~~
+
+The username and password was generated when you first deployed the catalog template, and the ConfigMap shown
+above was also created at that time.
+
+### Use ConfigMap
+
+Let's modify our application to use it. We will use the [Spring Cloud Kubernetes](https://github.com/fabric8io/spring-cloud-kubernetes#configmap-propertysource)
+project. Using this dependency, Spring Boot will search for a ConfigMap (by default with the same name as
+the application) to use as the source of application configuration during application bootstrapping and
+if enabled, triggers hot reloading of beans or Spring context when changes are detected on the ConfigMap.
+We'll use auto-reload later, but for now, add the following dependency to your `pom.xml` beneath the existing
+dependencies (look for the `<!-- add additional dependencies -->` comment):
 
 ~~~xml
 <dependency>
     <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-kubernetes</artifactId>
+    <artifactId>spring-cloud-starter-kubernetes-config</artifactId>
 </dependency>
 ~~~
 
-Configure Spring Cloud Kubernetes to auto-update configuration when ConfigMap changes. In `src/main/resources/application-default.properties`:
+Although Spring Cloud Kubernetes tries to discover ConfigMaps, due to security reasons containers
+by default are not allowed to snoop around OpenShift clusters and discover objects. Security comes first,
+and discovery is a privilege that needs to be granted to containers in each project.
 
-~~~
-# enable configmap auto-reload
-spring.cloud.kubernetes.reload.enabled=true
-~~~
+Since you do want Spring Boot to discover the ConfigMaps inside the **dev** project, you
+need to grant permission to the Spring Boot service account to access the OpenShift REST API and find the
+ConfigMaps. To grant this permission, run:
 
-Add com.redhat.coolstore.service.StoreConfig:
-
-~~~java
-package com.redhat.coolstore.service;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-
-@Component
-@ConfigurationProperties (prefix = "store")
-public class StoreConfig {
-
-    private List<String> recalledProducts;
-
-    public List<String> getRecalledProducts() {
-        return recalledProducts;
-    }
-
-    public void setRecalledProducts(List<String> recalledProducts) {
-        this.recalledProducts = recalledProducts;
-    }
-
-    public boolean isRecalled(String itemId) {
-        return recalledProducts.contains(itemId);
-    }
-}
+~~~bash
+oc policy add-role-to-user view -n dev -z default
 ~~~
 
-Modify `CatalogService` to filter products on the `recalledProducts` list:
-
-Add field:
-
-~~~java
-    @Autowired
-    StoreConfig storeConfig;
-~~~
-
-Modify `readAll()` to filter out recalled products (add the one line):
-
-~~~java
-    public List<Product> readAll() {
-        List<Product> productList = repository.readAll();
-        // remove recalled products
-        productList.removeIf(p -> storeConfig.isRecalled(p.getItemId()));
-        productList.parallelStream()
-                .forEach(p -> {
-                    p.setQuantity(inventoryClient.getInventoryStatus(p.getItemId()).getQuantity());
-                });
-        return productList;
-    }
-~~~
-
-Add unit test to `src/test/java` in class `com.redhat.coolstore.service.RecalledProductsTest`:
-
-~~~java
-package com.redhat.coolstore.service;
-
-import com.redhat.coolstore.model.Inventory;
-import com.redhat.coolstore.model.Product;
-import io.specto.hoverfly.junit.rule.HoverflyRule;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static io.specto.hoverfly.junit.core.SimulationSource.dsl;
-import static io.specto.hoverfly.junit.dsl.HoverflyDsl.service;
-import static io.specto.hoverfly.junit.dsl.HttpBodyConverter.json;
-import static io.specto.hoverfly.junit.dsl.ResponseCreators.success;
-import static org.assertj.core.api.Assertions.assertThat;
-
-@RunWith(SpringRunner.class)
-@SpringBootTest()
-@TestPropertySource(locations="classpath:test-recalled-products.properties")
-public class RecalledProductsTest {
-
-    @Autowired
-    CatalogService catalogService;
-
-    @ClassRule
-    public static HoverflyRule hoverflyRule = HoverflyRule.inSimulationMode(dsl(
-            service("inventory:8080")
-                    .get("/services/inventory/165613")
-                        .willReturn(success(json(new Inventory("165613",13))))
-                    .get("/services/inventory/165614")
-                        .willReturn(success(json(new Inventory("165614",85))))
-                    .get("/services/inventory/165954")
-                        .willReturn(success(json(new Inventory("165954",78))))
-                    .get("/services/inventory/329199")
-                        .willReturn(success(json(new Inventory("329199",67))))
-                    .get("/services/inventory/329299")
-                        .willReturn(success(json(new Inventory("329299",98))))
-                    .get("/services/inventory/444434")
-                        .willReturn(success(json(new Inventory("444434",73))))
-                    .get("/services/inventory/444435")
-                        .willReturn(success(json(new Inventory("444435",64))))
-                    .get("/services/inventory/444436")
-                        .willReturn(success(json(new Inventory("444436",30))))
-
-    ));
-
-    @Test
-    public void verify_recalled() throws Exception {
-        List<Product> productList = catalogService.readAll();
-        assertThat(productList).isNotNull();
-        assertThat(productList).isNotEmpty();
-        List<String> itemIds = productList.stream().map(Product::getItemId).collect(Collectors.toList());
-        assertThat(itemIds).doesNotContain("329299", "329199");
-    }
-}
-~~~
-
-Add `src/test/resources/test-recalled-products.properties` to support the unit test:
-
-~~~
-# Comma-separated recalled product itemIds
-store.recalledProducts = 329199,329299
-~~~
-
-run `mvn verify`, wait for:
+Next,
+Re-run the unit tests to ensure they still pass:
 
 ~~~console
+$ mvn verify
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
 [INFO] Total time: 24.662 s
@@ -161,39 +87,80 @@ run `mvn verify`, wait for:
 [INFO] ------------------------------------------------------------------------
 ~~~
 
-Run locally:
+### Commit code changes
 
-`mvn spring-boot:run -Dstore.recalledProducts=329199`
-
-Test to ensure you don't have any `329199` product:
-
-`open http://localhost:8081`
-
-Commit the pipeline to code repo:
+Commit the `pom.xml` changes to code repo:
 
 * In the project explorer, right click on catalog and then Git > Commit
-* Make sure newly created files, and `pom.xml` is checked
-* Add a commit message "externalized recalledProducts configuration"
+* Make sure `pom.xml` is checked
+* Add a commit message "externalized database configuration"
 * Check the "Push commit changes to..."
 * Click on "Commit"
 
-This will trigger the pipeline build. Wait for it to complete.
+This will trigger the pipeline build. Wait for it to complete. At this point the application
+should fetch the configuration and start using PostgreSQL instead of H2.
+
+### Verify configuration
+
+When the Catalog pod is ready, verify that the PostgreSQL database is being
+used. Check the Catalog pod logs:
+
+~~~sh
+oc logs dc/catalog | grep hibernate.dialect
+~~~
+
+You would see the **PostgreSQL94Dialect** is selected by Hibernate in the logs:
+
+~~~console
+2017-08-10 21:07:51.670  INFO 1 --- [           main] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL94Dialect
+~~~
+
+You can also connect to the Catalog PostgreSQL database and verify that the seed data is loaded:
+
+~~~sh
+oc rsh dc/catalog-postgresql
+~~~
+
+Once connected to the PostgreSQL container, run the following:
+
+> Run this command inside the Catalog PostgreSQL container, after opening a remote shell to it.
+
+~~~sh
+psql -U $POSTGRESQL_USER -d $POSTGRESQL_DATABASE -c "select itemId, name, price from catalog"
+~~~
+
+You should see the seed data gets listed.
+
+~~~
+ itemid |            name             | price
+----------------------------------------------
+ 329299 | Red Fedora                  | 34.99
+ 329199 | Forge Laptop Sticker        |   8.5
+ ...
+~~~
+
+Exit the container shell.
+
+~~~
+exit
+~~~
+
+### Test the result on OpenShift
+
+  APPS_HOSTNAME_SUFFIX: "apps.GUID.generic.opentlc.com"
 
 Test the catalog running on OpenShift:
 
-`open http://catalog-dev.[OPENSHIFT_MASTER]`
+`open http://catalog-dev.{{APPS_HOSTNAME_SUFFIX}}`
 
-Observe all products are present.
-
-Add a recalledProduct to the ConfigMap:
-
-~~~
-store.recalledProducts = 329299
-~~~
-
-Thanks to auto-refresh, this will immediately take effect. Observe on the catalog UI that the product is now missing
-(the UI auto-refreshes every 2 seconds so it should disappear within 2 seconds):
+Observe all products are present!
 
 ### Congratulations!
 
-You've now got a quick way to alter service configuration without redeploying! Congratulations!
+You've now got a quick way to alter service configuration without redeploying! As the application moves
+through different environments (test, staging, production), it will pick up its configuration via a
+ConfigMap within each environment, rather than being re-compiled with the new configuration each time.
+
+This mechanism can also be used to alter business logic in addition to infrastructure (database, etc)
+configuration. We'll employ this later in in the Fault Tolerance exercise to do a custom feature toggle
+for our services.

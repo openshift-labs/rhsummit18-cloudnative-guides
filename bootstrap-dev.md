@@ -14,7 +14,7 @@ programming languages. [Eclipse Che](https://www.eclipse.org/che/) is the next-g
 and gives you a full-features IDE running in the cloud. You have an Eclipse Che instance deployed on your OpenShift cluster 
 which you will use during these labs.
 
-Go to the Eclipse Che url in order to configuration your development workspace: [{{ECLIPSE_CHE_URL}}]({{ECLIPSE_CHE_URL}}){:target="che-console"}
+Go to the Eclipse Che url in order to configuration your development workspace: [{{ECLIPSE_CHE_URL}}](http://{{ECLIPSE_CHE_URL}}){:target="_blank"}
 
 A stack is a template of workspace configuration for example the programming language and tools you want to use 
 in your workspace. Stacks make it possible to recreate identical workspaces with all the tools and configurations 

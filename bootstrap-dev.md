@@ -85,7 +85,7 @@ Use the OpenShift CLI to login into OpenShift with the following credentials:
 * Password: ``{{ OPENSHIFT_PASSWORD }}``
 
 ~~~shell
-oc login {{ OPENSHIFT_MASTER_URL }}
+oc login {{ OPENSHIFT_MASTER_URL }} -u {{ OPENSHIFT_USERNAME }} -p {{ OPENSHIFT_PASSWORD }}
 ~~~
 
 ![OpenShift CLI Login]({% image_path bootstrap-ocp-login.png %}){:width="900px"}
@@ -113,7 +113,7 @@ in the **Catalog DEV** project:
 Run the following in Eclipse Che **Terminal**:
 
 ~~~shell
-oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \ 
+oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \
       -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git 
 ~~~
 

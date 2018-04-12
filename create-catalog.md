@@ -1,4 +1,4 @@
-## Create a Spring Boot Service
+## Create a Catalog Service
 
 As a developer you have been tasked with creating a catalog service that exposes a HTTP API to read from the product catalog database. After talking to the UI interface team you have decided to create two endpoints. One that returns a list of all products as a JSON string and another one that based on product Id returns a single product.
 

@@ -6,6 +6,8 @@ modules:
     name: Setup Development Environment
   create-catalog:
     name: Create a Spring Boot Service
+  service-to-service:
+    name: Call another service
   config-management:
     name: Externalise Configuration
   bootstrap-prod:

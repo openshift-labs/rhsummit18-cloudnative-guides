@@ -22,6 +22,7 @@ modules:
   - bootstrap-dev
   - create-catalog
   - config-management
+  - service-to-service
   - bootstrap-prod
   - release-prod
   - fault-tolerance

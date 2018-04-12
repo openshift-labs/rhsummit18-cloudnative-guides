@@ -11,7 +11,7 @@ In the `prod` project, there are two separate versions of the `inventory` servic
 `version:v1` and `version:v2`. The `v2` version has a built-in artifical delay of 2
 seconds, that we'll use later on.
 
-![V1V2]({% image_path inventory-v1-v2-overview.png %}){:width="900px"}
+![V1V2]({% image_path inventory-v1-v2.png %}){:width="900px"}
 
 For now, let's round-robin route calls to either `v1` or `v2` in a 50/50 split:
 

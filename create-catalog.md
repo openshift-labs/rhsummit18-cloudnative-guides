@@ -101,37 +101,37 @@ First we need to annotate the class with `@Repository`. In Domain Driven Design 
 Next, we will inject a `JdbcTemplate` which is required to run queries:
 
 ~~~java
-@Autowired
-private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 ~~~
 
 We also need a `RowMapper` that will help us transform the result of the query to a java Object, in our case we will use the `Product` class that we create in the previous section. The `RowMapper` declaration looks like this:
 
 ~~~java
-private RowMapper<Product> rowMapper = (rs, rowNum) -> {
-            Product p = new Product();
-            p.itemId = rs.getString("ITEMID");
-            p.name = rs.getString("NAME");
-            p.description = rs.getString("DESCRIPTION");
-            p.price = rs.getDouble("PRICE");
-            return p;
-        };
+    private RowMapper<Product> rowMapper = (rs, rowNum) -> {
+                Product p = new Product();
+                p.itemId = rs.getString("ITEMID");
+                p.name = rs.getString("NAME");
+                p.description = rs.getString("DESCRIPTION");
+                p.price = rs.getDouble("PRICE");
+                return p;
+            };
 ~~~
 
 Now, we are ready to create the methods that returns `Product` object(s). We will start with a simple findById that will return a single `Product` object. For this we will use the `JdbcTemplate` and pass a SQL query and the rowMapper, like this:
 
 ~~~java
-public Product findById(String id) {
-    return jdbcTemplate.queryForObject("SELECT * FROM CATALOG WHERE ITEMID = '" + id + "'", rowMapper);
-}
+    public Product findById(String id) {
+        return jdbcTemplate.queryForObject("SELECT * FROM CATALOG WHERE ITEMID = '" + id + "'", rowMapper);
+    }
 ~~~
 
 We also need a method to return all `Products` like that looks like this:
 
 ~~~java
-public List<Product> readAll() {
-    return jdbcTemplate.query("SELECT * FROM CATALOG", rowMapper);
-}
+    public List<Product> readAll() {
+        return jdbcTemplate.query("SELECT * FROM CATALOG", rowMapper);
+    }
 ~~~
 
 |**STEP BY STEP:** Creating a repository for accessing data

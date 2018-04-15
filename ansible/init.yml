@@ -288,6 +288,5 @@
     # populate nexus
     - name: populate nexus
       shell: "{{ openshift_cli }} new-build redhat-openjdk18-openshift:1.2~http://{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git -n {{ lab_infra_project }} -e MAVEN_MIRROR_URL=http://nexus.{{ lab_infra_project }}.svc:8081/repository/maven-all-public/"
-      register: jdk_imagestream_result
       ignore_errors: true
       tags: populate-nexus

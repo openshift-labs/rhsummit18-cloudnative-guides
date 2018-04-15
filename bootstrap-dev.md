@@ -14,7 +14,7 @@ programming languages. [Eclipse Che](https://www.eclipse.org/che/) is the next-g
 and gives you a full-features IDE running in the cloud. You have an Eclipse Che instance deployed on your OpenShift cluster 
 which you will use during these labs.
 
-Go to the Eclipse Che url in order to configuration your development workspace: {{ECLIPSE_CHE_URL}}
+Go to the Eclipse Che url in order to configuration your development workspace: [{{ECLIPSE_CHE_URL}}](http://{{ECLIPSE_CHE_URL}}){:target="_blank"}
 
 A stack is a template of workspace configuration for example the programming language and tools you want to use 
 in your workspace. Stacks make it possible to recreate identical workspaces with all the tools and configurations 
@@ -85,7 +85,7 @@ Use the OpenShift CLI to login into OpenShift with the following credentials:
 * Password: ``{{ OPENSHIFT_PASSWORD }}``
 
 ~~~shell
-oc login {{ OPENSHIFT_MASTER_URL }}
+oc login {{ OPENSHIFT_MASTER_URL }} -u {{ OPENSHIFT_USERNAME }} -p {{ OPENSHIFT_PASSWORD }}
 ~~~
 
 ![OpenShift CLI Login]({% image_path bootstrap-ocp-login.png %}){:width="900px"}
@@ -113,7 +113,7 @@ in the **Catalog DEV** project:
 Run the following in Eclipse Che **Terminal**:
 
 ~~~shell
-oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \ 
+oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \
       -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git 
 ~~~
 

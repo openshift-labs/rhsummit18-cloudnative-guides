@@ -46,6 +46,8 @@ Tips
   docker pull eclipse/che:6.3.0
   docker pull osevg/workshopper:latest
   docker pull siamaksade/centos_jdk8
+  docker pull siamaksade/rhsummit18-cloudnative-inventory
+  docker pull siamaksade/rhsummit18-cloudnative-web
   ```
 
 * Add an admin user to the cluster. Run the following as `system:admin`:

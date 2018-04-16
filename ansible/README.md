@@ -16,6 +16,7 @@ Playbook Variables
 |`user_gogs_password`   | `openshift`   | Gogs password to configure for admin and test users |
 |`project_suffix`       | NONE          | Project suffix for project names to be created e.g. `prod{PROJECT_SUFFIX}` |
 |`user_openshift`       | `developer`   | User to set as the admin of dev and prod projects |
+|`clean_init`           | `false`       | Clean the environment and remove projects before init |
 
 
 How To Run

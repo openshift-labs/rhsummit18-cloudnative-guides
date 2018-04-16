@@ -14,6 +14,7 @@
     github_ref: master
     project_suffix: 
     istio_version: 0.6.0
+    clean_init: false
 
   tasks:
     - include_role:
@@ -22,6 +23,11 @@
 
     - set_fact:
         gogs_hostname: gogs-{{ lab_infra_project }}.{{ apps_hostname_suffix }}
+      tags: always
+
+    - name: clean up lab environment
+      shell: "{{ openshift_cli }} delete project {{ lab_infra_project }} istio-system prod{{ project_suffix }}"
+      when: clean_init|bool
       tags: always
 
     - name: create lab infra project

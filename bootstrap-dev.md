@@ -247,7 +247,7 @@ kind: BuildConfig
 metadata:
   name: catalog-build
 spec:
-  runPolicy: Serial
+  runPolicy: SerialLatestOnly
   source:
     git:
       ref: master

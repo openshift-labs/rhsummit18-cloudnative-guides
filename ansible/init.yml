@@ -15,7 +15,7 @@
     project_suffix: 
     istio_version: 0.6.0
     clean_init: false
-
+    istio_options: 
   tasks:
     - include_role:
         name: openshift_common_facts
@@ -29,6 +29,12 @@
       shell: "{{ openshift_cli }} delete project {{ lab_infra_project }} istio-system prod{{ project_suffix }}"
       when: clean_init|bool
       ignore_errors: true
+      tags: always
+
+    - name: wait for clean up
+      pause:
+        seconds: 20
+      when: clean_init|bool
       tags: always
 
     - name: create lab infra project

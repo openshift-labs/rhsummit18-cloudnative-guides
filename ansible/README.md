@@ -14,6 +14,8 @@ Playbook Variables
 |`user_gogs_admin`      | `gogs`        | Admin username to create in Gogs |
 |`user_gogs_test`       | `test`        | Test username to create in Gogs |
 |`user_gogs_password`   | `openshift`   | Gogs password to configure for admin and test users |
+|`project_suffix`       | NONE          | Project suffix for project names to be created as `prod{PROJECT_SUFFIX}` |
+
 
 How To Run
 ------------
@@ -46,8 +48,8 @@ Tips
   docker pull eclipse/che:6.3.0
   docker pull osevg/workshopper:latest
   docker pull siamaksade/centos_jdk8
-  docker pull siamaksade/rhsummit18-cloudnative-inventory
-  docker pull siamaksade/rhsummit18-cloudnative-web
+  docker pull siamaksade/rhsummit18-cloudnative-inventory:prod
+  docker pull siamaksade/rhsummit18-cloudnative-web:prod
   ```
 
 * Add an admin user to the cluster. Run the following as `system:admin`:

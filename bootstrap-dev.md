@@ -103,22 +103,38 @@ capability can be used to build a container image from the source code. OpenShif
 OpenJDK container image to build the final container image of the Catalog service using the Spring Boot uber-jar laid over the 
 certified OpenJDK container image that comes with the OpenShift platform.
 
-[Templates]({{OPENSHIFT_DOCS_BASE}}/dev_guide/templates.html) allow composing applications from multiple containers and deploy 
-them at once. The Catalog service needs a PostgreSQL database and therefore you can use a template that is already 
-created to deploy the Catalog skeleton project and a PostgreSQL database on OpenShift.
+Run the following in Eclipse Che **Terminal** in order to build the Catalog container image using S2I:
 
-Deploy the [Catalog template](https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml) 
-in the **Catalog DEV** project:
+~~~shell
+oc new-build redhat-openjdk18-openshift:1.2~http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git \
+    -e MAVEN_MIRROR_URL=http://nexus.lab-infra.svc:8081/repository/maven-all-public
+~~~
+
+The `base-image#source-repo` expression in the above command instructs OpenShift to pull the 
+application source code from the specified source code repository, build it using the build tool that 
+is suitable for the application (nothing says Maven louder than a `pom.xml`!), and then build the container 
+image for the application by layering the application binaries on the `base-image`. Since Catalog service 
+is based on Spring Boot, we use the certified OpenJDK image that is available in OpenShift 
+aka `redhat-openjdk18-openshift:1.2`.
+
+Go to **Builds** > **Builds** to see the Catalog image build running. You can also see the build logs by 
+clicking on the build.
+
+[OpenShift Templates]({{OPENSHIFT_DOCS_BASE}}/dev_guide/templates.html) allow composing applications 
+from multiple containers and deploy them at once. The Catalog service needs a PostgreSQL database and 
+therefore you can use a template that is already created to deploy the Catalog skeleton project and 
+a PostgreSQL database on OpenShift.
+
+
+When the Catalog image build is complete and you have the image ready, use the 
+[Catalog template](https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml) 
+to deploy the image in the **Catalog DEV** project.
 
 Run the following in Eclipse Che **Terminal**:
 
 ~~~shell
-oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml \
-      -p GIT_URI=http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git 
+oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml 
 ~~~
-
-Notice that you can provide parameters to templates to for example customize the source code Git repository.
-
 
 #### Continuos Integration Pipeline
 

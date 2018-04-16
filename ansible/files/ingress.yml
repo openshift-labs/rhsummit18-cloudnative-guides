@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: lab-ingress
+  annotations:
+    kubernetes.io/ingress.class: "istio"
+spec:
+  backend:
+    serviceName: web-ui
+    servicePort: http
+  rules:
+  - http:
+      paths:
+      - path: /services/inventory/.*
+        backend:
+          serviceName: inventory
+          servicePort: http
+      - path: /services/products
+        backend:
+          serviceName: catalog
+          servicePort: http

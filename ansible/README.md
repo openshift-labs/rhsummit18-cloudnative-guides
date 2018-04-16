@@ -14,11 +14,14 @@ Playbook Variables
 |`user_gogs_admin`      | `gogs`        | Admin username to create in Gogs |
 |`user_gogs_test`       | `test`        | Test username to create in Gogs |
 |`user_gogs_password`   | `openshift`   | Gogs password to configure for admin and test users |
-|`project_suffix`       | NONE          | Project suffix for project names to be created as `prod{PROJECT_SUFFIX}` |
+|`project_suffix`       | NONE          | Project suffix for project names to be created e.g. `prod{PROJECT_SUFFIX}` |
+|`user_openshift`       | `developer`   | User to set as the admin of dev and prod projects |
 
 
 How To Run
 ------------
+
+Log in to OpenShift with a `cluster-admin` user and then run:
 
 ```
 ansible-galaxy install -r requirements.yml
@@ -29,7 +32,7 @@ Troubleshooting
 ---------------
 * Mac OS X users need to upgrade the default Python installed to avoid certificate issues with GitHub. See https://blog.bearandgiraffe.com/ansible-github-and-a-failed-to-validate-the-ssl-certificate-story-a8a10ea17512 for more details on how to upgrade the ansible to use a later version of python.
 * The Ansible Galaxy roles requires `jmespath` python package on Mac OS X. To install it run: `sudo pip3 install jmespath`
-
+* Ansible on Mac OS X needs the GNU tar instead of BSD tar. Install it via `brew install gnu-tar`
 
 
 Tips

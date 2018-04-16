@@ -1,0 +1,96 @@
+---
+- name: check if istio deployed 
+  shell: "{{ openshift_cli }} get project istio-system"
+  register: istio_project_result
+  ignore_errors: true
+  changed_when: false
+
+- name: create temporary istio directory
+  tempfile:
+    state: directory
+    prefix: istio
+  register: istio_dir
+
+- name: download istio on linux
+  unarchive:
+    remote_src: yes
+    src: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linuxs.tar.gz"
+    dest: "{{ istio_dir.path }}"
+  when: ansible_distribution != 'MacOSX'
+
+- name: download istio on mac
+  unarchive:
+    remote_src: yes
+    src: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-osx.tar.gz"
+    dest: "{{ istio_dir.path }}"
+  when: ansible_distribution == 'MacOSX'
+
+- name: setup istio-system project
+  shell: |
+    {{ openshift_cli }} new-project istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z istio-ingress-service-account    -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user privileged  -z istio-ingress-service-account    -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z istio-egress-service-account     -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user privileged  -z istio-egress-service-account     -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z istio-pilot-service-account      -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user privileged  -z istio-pilot-service-account      -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z istio-grafana-service-account    -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z istio-prometheus-service-account -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z prometheus                       -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user privileged  -z prometheus                       -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z grafana                          -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user privileged  -z grafana                          -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid      -z default                          -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user privileged  -z default                          -n istio-system
+    {{ openshift_cli }} adm policy add-cluster-role-to-user  cluster-admin  -z default             -n istio-system
+  when: istio_project_result|failed
+
+- name: deploy istio and jaeger
+  shell: |
+    {{ openshift_cli }} apply  -f {{ istio_dir.path }}/istio-{{ istio_version }}/install/kubernetes/istio.yaml                -n istio-system
+    {{ openshift_cli }} create -f {{ istio_dir.path }}/istio-{{ istio_version }}/install/kubernetes/addons/prometheus.yaml    -n istio-system
+    {{ openshift_cli }} create -f {{ istio_dir.path }}/istio-{{ istio_version }}/install/kubernetes/addons/grafana.yaml       -n istio-system
+    {{ openshift_cli }} create -f {{ istio_dir.path }}/istio-{{ istio_version }}/install/kubernetes/addons/servicegraph.yaml  -n istio-system
+    {{ openshift_cli }} apply  -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml -n istio-system
+    {{ openshift_cli }} expose svc grafana       -n istio-system
+    {{ openshift_cli }} expose svc servicegraph  -n istio-system
+    {{ openshift_cli }} expose svc jaeger-query  -n istio-system
+    {{ openshift_cli }} expose svc istio-ingress -n istio-system
+    {{ openshift_cli }} expose svc prometheus    -n istio-system
+  when: istio_project_result|failed
+
+# create prod
+- name: create prod project
+  shell: |
+    {{ openshift_cli }} adm new-project prod{{ project_suffix }} --display-name='CoolStore PROD' --admin='{{ user_openshift }}'
+    {{ openshift_cli }} adm policy add-scc-to-user privileged -z default -n prod{{ project_suffix }}
+    {{ openshift_cli }} adm policy add-scc-to-user anyuid -z default prod{{ project_suffix }}
+    {{ openshift_cli }} adm policy add-role-to-user admin system:serviceaccount:prod{{ project_suffix }}:default -n prod{{ project_suffix }}
+
+- name: deploy web in prod
+  shell: |
+    {{ openshift_cli }} process -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/web-template.yml \
+        --param=IMAGE_VERSION=prod \
+        -n prod{{ project_suffix }} | \
+              {{ istio_dir.path }}/istio-{{ istio_version }}/bin/istioctl kube-inject -f - | \
+                  {{ openshift_cli }} apply -f - -n prod{{ project_suffix }}
+
+- name: deploy inventory in prod
+  shell: |
+    {{ openshift_cli }} process -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/inventory-template.yml \
+        --param=IMAGE_VERSION=prod \
+        -n prod{{ project_suffix }} | \
+              {{ istio_dir.path }}/istio-{{ istio_version }}/bin/istioctl kube-inject -f - | \
+                  {{ openshift_cli }} apply -f - -n prod{{ project_suffix }}
+
+- name: deploy catalog in prod
+  shell: |
+    {{ openshift_cli }} process -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/catalog-template.yml \
+        --param=IMAGE_VERSION=prod \
+        -n prod{{ project_suffix }} | \
+              {{ istio_dir.path }}/istio-{{ istio_version }}/bin/istioctl kube-inject -f - | \
+                  {{ openshift_cli }} apply -f - -n prod{{ project_suffix }}
+
+- name: create istio ingress
+  shell: "{{ openshift_cli }} create -f files/ingress.yml -n prod{{ project_suffix }}"
+  ignore_errors: true

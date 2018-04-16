@@ -1,0 +1,69 @@
+---
+- import_role:
+    name: openshift_gogs
+  vars:
+    project_name: "{{ lab_infra_project }}"
+    gogs_route: "{{ gogs_hostname }}"
+    gogs_image_version: 0.11.34
+    gogs_admin_user: "{{ user_gogs_admin }}"
+    gogs_admin_password: "{{ user_gogs_password }}"
+    gogs_user: "{{ user_gogs_user }}"
+    gogs_password: "{{ user_gogs_password }}"
+    clean_deploy: true
+
+- name: wait for gogs to be running
+  uri:
+    url: http://{{ gogs_hostname }}
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: "30"
+  delay: "10"
+
+- name: check if catalog git repository exists
+  uri:
+    url: http://{{ gogs_hostname }}/api/v1/repos/{{ user_gogs_user }}/catalog
+    user: "{{ user_gogs_user }}"
+    password: "{{ user_gogs_password }}"
+    force_basic_auth: true
+    status_code: 200,404
+  register: repo_result
+
+- name: create catalog git repository
+  uri:
+    url: http://{{ gogs_hostname }}/api/v1/user/repos
+    method: POST
+    body: '{"name": "catalog", "private": false}'
+    body_format: json
+    user: "{{ user_gogs_user }}"
+    password: "{{ user_gogs_password }}"
+    status_code: 200,201
+    force_basic_auth: true
+  when: repo_result.status != 200
+
+- name: create temporary git directory
+  tempfile:
+    state: directory
+    prefix: projects-git
+  register: git_dir
+  when: repo_result.status != 200
+
+- name: unarchive projects source archive
+  unarchive:
+    remote_src: yes
+    src: "https://github.com/{{ github_account }}/rhsummit18-cloudnative-labs/archive/{{ github_ref }}.zip"
+    dest: "{{ git_dir.path }}"
+  when: repo_result.status != 200
+
+- name: push catalog to git repository in Gogs
+  shell: |
+    git init
+    git remote add origin http://{{ user_gogs_user }}:{{ user_gogs_password }}@{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git
+    git add . --all
+    git config user.email "rhdeveloper@redhat.com"
+    git config user.name "rh-developer"
+    git commit -m "Initial add"
+    git push origin master
+  args:
+    chdir: "{{ git_dir.path }}/rhsummit18-cloudnative-labs-{{ github_ref }}/catalog"
+  when: repo_result.status != 200

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Template
+metadata:
+  annotations:
+    description: Catalog Build Template
+    iconClass: icon-java
+    tags: microservice,spring
+  name: catalog-build
+objects:
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      build: catalog
+    name: catalog
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'catalog:prod'
+        namespace: ${PUSH_NAMESPACE}
+    runPolicy: Serial
+    source:
+      git:
+        uri: ${GIT_URI}
+      type: Git
+    strategy:
+      sourceStrategy:
+        env:
+          - name: MAVEN_MIRROR_URL
+            value: 'http://nexus.lab-infra.svc:8081/repository/maven-all-public/'
+        from:
+          kind: ImageStreamTag
+          name: 'redhat-openjdk18-openshift:1.2'
+          namespace: openshift
+      type: Source
+parameters:
+- description: Git source URI for application
+  displayName: Git source repository
+  name: GIT_URI
+  required: true
+- description: Push to namespaces
+  displayName: Push Namespace
+  name: PUSH_NAMESPACE
+  required: true
+  value: 

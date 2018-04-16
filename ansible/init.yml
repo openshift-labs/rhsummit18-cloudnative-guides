@@ -305,7 +305,14 @@
 
     # populate nexus
     - name: populate nexus
-      shell: "{{ openshift_cli }} new-build redhat-openjdk18-openshift:1.2~http://{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git -e MAVEN_MIRROR_URL=http://nexus.{{ lab_infra_project }}.svc:8081/repository/maven-all-public/ -n {{ lab_infra_project }}"
+      shell: |
+        {{ openshift_cli }} create imagestream catalog -n prod{{ project_suffix }}
+        {{ openshift_cli }} adm policy add-role-to-user system:image-builder system:serviceaccount:{{ lab_infra_project }}:builder -n prod{{ project_suffix }}
+        {{ openshift_cli }} new-build redhat-openjdk18-openshift:1.2~http://{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git -e MAVEN_MIRROR_URL=http://nexus.{{ lab_infra_project }}.svc:8081/repository/maven-all-public/ -n {{ lab_infra_project }}
+        {{ openshift_cli }} cancel-build bc/catalog -n {{ lab_infra_project }}
+        {{ openshift_cli }} patch bc catalog -p '{"spec":{"output":{"to":{"name":"catalog:prod","namespace":"prod{{ project_suffix }}"}}}}' -n {{ lab_infra_project }}
+        {{ openshift_cli }} start-build catalog -n {{ lab_infra_project }}
       ignore_errors: true
       tags: populate-nexus
+
 

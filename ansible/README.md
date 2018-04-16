@@ -33,6 +33,11 @@ Troubleshooting
 * Mac OS X users need to upgrade the default Python installed to avoid certificate issues with GitHub. See https://blog.bearandgiraffe.com/ansible-github-and-a-failed-to-validate-the-ssl-certificate-story-a8a10ea17512 for more details on how to upgrade the ansible to use a later version of python.
 * The Ansible Galaxy roles requires `jmespath` python package on Mac OS X. To install it run: `sudo pip3 install jmespath`
 * Ansible on Mac OS X needs the GNU tar instead of BSD tar. Install it via `brew install gnu-tar`
+* If you get `Init Crash Loop Back-off` in prod project, it's due to an [issue with Istio 0.6.0](https://github.com/istio/issues/issues/34). Disable SELinux on all your OpenShift nodes:
+
+  ```
+  setenforce 0 >& /dev/null || echo "no setenforce found; ignoring"
+  ```
 
 
 Tips

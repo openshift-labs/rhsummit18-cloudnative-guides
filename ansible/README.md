@@ -36,7 +36,7 @@ Troubleshooting
 * If you get `Init Crash Loop Back-off` in prod project, it's due to an [issue with Istio 0.6.0](https://github.com/istio/issues/issues/34). Disable SELinux on all your OpenShift nodes:
 
   ```
-  setenforce 0 >& /dev/null || echo "no setenforce found; ignoring"
+  setenforce 0 
   ```
 
 

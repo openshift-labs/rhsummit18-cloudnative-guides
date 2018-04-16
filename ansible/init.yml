@@ -11,6 +11,7 @@
     openshift_cli: oc
     github_account: openshift-labs
     github_ref: master
+    project_suffix: 
 
   tasks:
     - include_role:
@@ -269,6 +270,23 @@
         status_code: 200,201
       tags: eclipse-che
 
+    # create prod
+    - name: create prod project
+      shell: "{{ openshift_cli }} new-project prod{{ project_suffix }} --display-name='CoolStore PROD'"
+      ignore_errors: true
+
+    - name: deploy web in prod
+      shell: "{{ openshift_cli }} new-app -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/web-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }}"
+      ignore_errors: true
+
+    - name: deploy inventory in prod
+      shell: "{{ openshift_cli }} new-app -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/inventory-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }}"
+      ignore_errors: true
+
+    - name: deploy catalog in prod
+      shell: "{{ openshift_cli }} new-app -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/catalog-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }}"
+      ignore_errors: true
+
     # validate cluster
     - name: check openjdk image stream installed
       shell: "{{ openshift_cli }} get is redhat-openjdk18-openshift -n openshift"
@@ -284,9 +302,10 @@
           - '{{ openshift_cli }} create -n openshift -f https://raw.githubusercontent.com/openshift/openshift-ansible/release-3.9/roles/openshift_examples/files/examples/v3.9/xpaas-streams/jboss-image-streams.json'
       when: jdk_imagestream_result|failed   
       tags: validate     
-      
+
     # populate nexus
     - name: populate nexus
-      shell: "{{ openshift_cli }} new-build redhat-openjdk18-openshift:1.2~http://{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git -n {{ lab_infra_project }} -e MAVEN_MIRROR_URL=http://nexus.{{ lab_infra_project }}.svc:8081/repository/maven-all-public/"
+      shell: "{{ openshift_cli }} new-build redhat-openjdk18-openshift:1.2~http://{{ gogs_hostname }}/{{ user_gogs_user }}/catalog.git -e MAVEN_MIRROR_URL=http://nexus.{{ lab_infra_project }}.svc:8081/repository/maven-all-public/ -n {{ lab_infra_project }}"
       ignore_errors: true
       tags: populate-nexus
+

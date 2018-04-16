@@ -14,7 +14,7 @@
 - name: download istio on linux
   unarchive:
     remote_src: yes
-    src: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linuxs.tar.gz"
+    src: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux.tar.gz"
     dest: "{{ istio_dir.path }}"
   when: ansible_distribution != 'MacOSX'
 

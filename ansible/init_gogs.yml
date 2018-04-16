@@ -51,7 +51,7 @@
 - name: unarchive projects source archive
   unarchive:
     remote_src: yes
-    src: "https://github.com/{{ github_account }}/rhsummit18-cloudnative-labs/archive/{{ github_ref }}.zip"
+    src: "https://github.com/{{ github_account }}/rhsummit18-cloudnative-labs/archive/{{ github_ref }}.tar.gz"
     dest: "{{ git_dir.path }}"
   when: repo_result.status != 200
 

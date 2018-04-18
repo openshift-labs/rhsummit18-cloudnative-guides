@@ -7,7 +7,7 @@
       "default": {
         "recipe": {
           "type": "dockerimage",
-          "content": "siamaksade/che-centos-jdk8:spring-boot-dep"
+          "content": "siamaksade/che-centos-jdk8:rhsummit18-cloudnative"
         },
         "machines": {
           "dev-machine": {

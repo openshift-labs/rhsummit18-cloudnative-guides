@@ -31,11 +31,29 @@
       ignore_errors: true
       tags: always
 
-    - name: wait for clean up
-      pause:
-        seconds: 180
-      when: clean_init|bool
-      tags: always
+    - name: wait for {{ lab_infra_project }} project to get removed
+      shell: "{{ openshift_cli }} get project {{ lab_infra_project }}"
+      ignore_errors: true
+      register: result
+      until: result|failed
+      retries: 30
+      delay: 30
+
+    - name: wait for istio-system project to get removed
+      shell: "{{ openshift_cli }} get project istio-system"
+      ignore_errors: true
+      register: result
+      until: result|failed
+      retries: 30
+      delay: 30
+
+    - name: wait for prod project to get removed
+      shell: "{{ openshift_cli }} get project prod{{ project_suffix }}"
+      ignore_errors: true
+      register: result
+      until: result|failed
+      retries: 30
+      delay: 30
 
     - name: create lab infra project
       shell: "{{ openshift_cli }} new-project {{ lab_infra_project }}"

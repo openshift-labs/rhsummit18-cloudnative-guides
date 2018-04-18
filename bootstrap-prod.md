@@ -16,7 +16,9 @@ Grant Jenkins access:
 oc policy add-role-to-user system:deployer system:serviceaccount:dev:jenkins -n prod{{ PROJECT_SUFFIX }}
 ~~~
 
-Create a pipeline:
+In your workspace in the root of catalog directory, right-click and then click on 
+**New** > **File** and name it `Jenkinsfile.release`. Paste the following pipeline definition 
+into `Jenkinsfile.release`:
 
 ~~~groovy
 def releaseTag
@@ -70,10 +72,17 @@ pipeline {
 }
 ~~~
 
-Commit the pipeline in the catalog git repo
+Commit the `Jenkinsfile.release` in to the git repository by right-clicking on the catalog in the project 
+explorer and then on **Git** > **Commit**.
 
-Go to DEV project, **Add to Project** > *Import YAML/JSON* and paste the following to create an OpenShift pipeline 
-using the `Jenkinsfile.release` pipeline defined in Git repo:
+Make sure `Jenkinsfile.release` is checked. Enter a commit message to describe your change. Check the 
+**Push commit changes to...** to push the commit directly to the git server and then click on **Commit***
+
+![Eclipse Che - Jenkinsfile Commit]({% image_path prod-pipeline-commit.png %}){:width="600px"}
+
+You can now create an OpenShift Pipeline that uses the `Jenkinsfile.release` definition from the git repository 
+to create a pipeline. In the OpenShift Web Console go to the **Catalog DEV** project. Click on 
+**Add to Project** > **Import YAML/JSON** and paste the following pipeline definition:
 
 ~~~yaml
 apiVersion: build.openshift.io/v1
@@ -95,3 +104,5 @@ spec:
       jenkinsfilePath: Jenkinsfile.release
     type: JenkinsPipeline
 ~~~
+
+Click on **Create**. Try the pipeline!

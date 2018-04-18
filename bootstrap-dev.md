@@ -238,8 +238,9 @@ that OpenShift uses to automate the deployment process:
 oc set triggers dc/catalog --manual -n dev{{PROJECT_SUFFIX}}
 ~~~
 
-In the web console go to the **Catalog DEV** project. Click on **Add to Project** > **Import YAML/JSON** 
-and paste the following pipeline definition:
+You can now create an OpenShift Pipeline that uses the `Jenkinsfile` definition from the git repository 
+to create a pipeline. In the OpenShift Web Console go to the **Catalog DEV** project. Click 
+on **Add to Project** > **Import YAML/JSON** and paste the following pipeline definition:
 
 ~~~shell
 apiVersion: build.openshift.io/v1
@@ -263,7 +264,7 @@ spec:
       type: Generic
 ~~~
 
-Try the pipeline!
+Click on **Create**. Try the pipeline!
 
 #### Build and Test on Every Code Change
 

@@ -15,8 +15,8 @@ vars:
   GIT_PASSWORD: "openshift"
   GIT_HOSTNAME: "gogs-lab-infra.apps-GUID.generic.opentlc.com"
   ECLIPSE_CHE_URL: "http://che-lab-infra.apps-GUID.generic.opentlc.com"
+  NEXUS_EXTERNAL_URL: "http://nexus-lab-infra.apps-GUID.generic.opentlc.com"
 
-  
 modules:
   activate:
   - bootstrap-dev
@@ -27,4 +27,4 @@ modules:
   - release-prod
   - fault-tolerance
   - test-automation
-  - next-steps
+  - env-info

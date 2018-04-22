@@ -4,7 +4,7 @@ As a developer you have been tasked with creating a catalog service that exposes
 
 The catalog service is part of the a microservice architectured application called Coolstore. 
 
-TODO: Add picture of coolstore app
+![CoolStore Microservices]({% image_path create-catalog-coolstore.png %}){:width="900px"}
 
 TODO: Add picture of Catalog application.
 
@@ -27,7 +27,7 @@ Based on that you decide to create a database table called `CATALOG` that looks 
 |--------|-------------|-----------------------------------------------------------------------------------------|-------|
 | 444435 | Oculus Rift | The world of gaming has also undergone some very unique and compelling tech advances... | 106.0 |
 
-To populate our database we will use a auto import feature of Spring that will pre-populate our database with content. We do that by creating a file called **schema.sql** under **src/main/resources**
+To populate our database we will use a auto import feature of Spring that will pre-populate our database with content. We do that by creating a file called `schema.sql` under `src/main/resources`
 
 ~~~sql
 DROP TABLE IF EXISTS CATALOG;
@@ -82,7 +82,7 @@ public class Product {
 
 To access data from the database we will implement a `ProductRepository` class using `JdbcTemplate` based on KISS principle. Keep It Simple Stupid ;-)
 
-Start by creating a class called **ProductRepository** in **src/main/java/com/redhat/coolstore/service**
+Start by creating a class called `ProductRepository` in `src/main/java/com/redhat/coolstore/service`
 
 ~~~java
 package com.redhat.coolstore.service;
@@ -97,6 +97,16 @@ First we need to annotate the class with `@Repository`. In Domain Driven Design 
 ~~~java
 @Repository
 ~~~
+
+You will get an error notice near the annotation which tells you the annotation should be imported in order to be used in 
+your Java class. Fortunately Eclipse Che can fix that for you automatically. Right-click on the annotation (or the error) and 
+then choose **Quick Fix**. Eclipse Che will show you a list of quick fixes, click on **Import 'Repository'...** to import it to your 
+Java class.
+
+|![Quick Fix]({% image_path create-catalog-quick-fix.png %}){:width="400px"}
+
+|![Import Annotation]({% image_path create-catalog-import-class.png %}){:width="600px"}
+
 
 Next, we will inject a `JdbcTemplate` which is required to run queries:
 
@@ -256,17 +266,17 @@ And finally we create the endpoint to find a particular product, by providing th
 
 ### Testing the endpoint
 
-We are now ready to test the endpoint and for that we could implement a unit test, but we will save that for a bit later. Instead we are going to run the application, using the **Commands Palette** in Eclipse Che.
+We are now ready to test the endpoint and for that we could implement a unit test, but we will save that for a bit later. Instead we are going to run the application, using the **Commands Palette** in Eclipse Che. Click on the **Commands Palette** and then on **RUN > run**
 
-When the RUN output panel reports "initialization complete" click on the link next to **Preview:** to open a preview browser to the application.
+When the **run** output panel reports `Started CatalogServiceApplication` click on the link next to **Preview:** to open a preview browser to the application.
 
 Don't worry if you see a **Application Not Available** page. Just reload the page using using F5 (or CTRL+R or CMD+R if on mac).
 
-![Git Server - Create Repo]({% image_path create-catalog-application-not-available.png %}){:width="700px"}
+![Application Not Available]({% image_path create-catalog-application-not-available.png %}){:width="600px"}
 
 You should now see a page that list the content of the product catalog like this:
 
-![Git Server - Create Repo]({% image_path create-catalog-success.png %}){:width="700px"}
+![Application Preview]({% image_path create-catalog-success.png %}){:width="700px"}
 
 |**NOTE:** This command will run `mvn spring-boot:run`, but is similar to running `java -jar target/<app>.jar` directly from a terminal window.
 
@@ -284,17 +294,22 @@ You should now see a page that list the content of the product catalog like this
 
 Commit all the changes and push all the changes by selecting **Git > Commit** from the menu.
 
-![Git Server - Create Repo]({% image_path create-catalog-commit-1.png %}){:width="200px"}
+![Git Commit]({% image_path create-catalog-commit-1.png %}){:width="200px"}
 
 Select all the changed or new files and check the box next to **Push committed changes to:** and then push **Commit**
 
-![Git Server - Create Repo]({% image_path create-catalog-commit-2.png %}){:width="600px"}
+![Git Commit]({% image_path create-catalog-commit-2.png %}){:width="600px"}
 
-Open the OpenShift [webconsole]({{OPENSHIFT_MASTER_URL}}/console/project/dev/browse/pipelines){:target="_blank"} and watch the pipeline build
+Open the OpenShift and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the Catalog code:
+`{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
 
-![Git Server - Create Repo]({% image_path create-catalog-pipeline.png %}){:width="700px"}
+![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
 
-When the pipeline is ready you can access the application via the console or via [this](http://catalog-dev.{{apps.thomasqvarnstrom.com}}){:target="_blank"} link.
+When the pipeline is completed, point your browser to the Catalog url deployed on OpenShift to access it:
+`http://catalog-dev.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}
+
+
+Note that you can find the Catalog url also in the project overview in the OpenShift Web Console.
 
 |**STEP BY STEP:** Commit the changes and run the pipeline
 |![Step by step - Commit the changes and run the pipeline]({% image_path create-catalog-step-by-step-pipeline.gif %}){:width="640px"}

@@ -4,9 +4,6 @@
 In this lab you will configure you local development environment using Eclipse Che IDE and create 
 a build pipeline that build, tests and deploys a Spring Boot service on OpenShift.
 
-- TOC
-{:toc}
-
 #### Configure Development Workspace in Eclipse Che
 
 You might be familiar with the Eclipse IDE which has been for years, one of the popoular IDEs for Java and other 
@@ -14,7 +11,10 @@ programming languages. [Eclipse Che](https://www.eclipse.org/che/) is the next-g
 and gives you a full-features IDE running in the cloud. You have an Eclipse Che instance deployed on your OpenShift cluster 
 which you will use during these labs.
 
-Go to the Eclipse Che url in order to configuration your development workspace: [{{ECLIPSE_CHE_URL}}](http://{{ECLIPSE_CHE_URL}}){:target="_blank"}
+Go to the Eclipse Che url in order to configuration your development workspace: <br/> 
+`{{ ECLIPSE_CHE_URL }}`{: style="color: blue"}
+
+|**CAUTION:** Replace `GUID` with the guid provided to you.
 
 A stack is a template of workspace configuration for example the programming language and tools you want to use 
 in your workspace. Stacks make it possible to recreate identical workspaces with all the tools and configurations 
@@ -47,11 +47,20 @@ your name and email and click on **Save**
 ![Eclipse Che - Git Config]({% image_path bootstrap-che-git-profile.png %}){:width="600px"}
 
 The source code for the Catalog service is available in the git server running on OpenShift:<br/>
-http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git
+`http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`{: style="color: blue"} 
+
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
+
 
 In the project explorer pane, click on **Import Projects...** link and enter the Catalog git 
-repository url:<br/> `http://{{GIT_USERNAME}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`
+repository url:<br/> 
+`http://{{GIT_USERNAME}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`{: style="color: blue"} 
 
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
+
+<br/>
 
 ![Eclipse Che - Import Project]({% image_path bootstrap-che-import.png %}){:width="720px"}
 
@@ -84,6 +93,8 @@ Use the OpenShift CLI to login into OpenShift with the following credentials:
 * Username: ``{{ OPENSHIFT_USERNAME }}``
 * Password: ``{{ OPENSHIFT_PASSWORD }}``
 
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
 ~~~shell
 oc login {{ OPENSHIFT_MASTER_URL }} -u {{ OPENSHIFT_USERNAME }} -p {{ OPENSHIFT_PASSWORD }}
 ~~~
@@ -104,6 +115,8 @@ OpenJDK container image to build the final container image of the Catalog servic
 certified OpenJDK container image that comes with the OpenShift platform.
 
 Run the following in Eclipse Che **Terminal** in order to build the Catalog container image using S2I:
+
+|**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~shell
 oc new-build redhat-openjdk18-openshift:1.2~http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git \
@@ -136,7 +149,7 @@ Run the following in Eclipse Che **Terminal**:
 oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml 
 ~~~
 
-#### Continuos Integration Pipeline
+#### Continuous Integration Pipeline
 
 In order to automate the build and test process every time someone changes source code of the Catalog 
 service, create a CI pipeline on Jenkins which checks the code on every commit and builds and tests it. 
@@ -242,6 +255,8 @@ You can now create an OpenShift Pipeline that uses the `Jenkinsfile` definition 
 to create a pipeline. In the OpenShift Web Console go to the **Catalog DEV** project. Click 
 on **Add to Project** > **Import YAML/JSON** and paste the following pipeline definition:
 
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
 ~~~shell
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
@@ -283,7 +298,9 @@ On the **Configurations** tab copy the **Generic Webhook URL**:
 
 Now go to the Git server web in your browser and login with your Git credentials:
 
-* Git Server Web: [http://{{GIT_HOSTNAME}}](http://{{GIT_HOSTNAME}}/user/login){:target="_blank"}
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
+* Git Server Web: `http://{{GIT_HOSTNAME}}`{: style="color: blue"}
 * Git Username: `{{GIT_USERNAME}}`
 * Git Password: `{{GIT_PASSWORD}}`
 

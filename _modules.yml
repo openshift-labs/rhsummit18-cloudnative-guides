@@ -7,7 +7,7 @@ modules:
   create-catalog:
     name: Create a Spring Boot Service
   service-to-service:
-    name: Call another service
+    name: Connect Catalog to Inventory
   config-management:
     name: Externalise Configuration
   bootstrap-prod:

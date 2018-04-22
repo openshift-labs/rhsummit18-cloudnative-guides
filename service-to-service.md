@@ -6,7 +6,7 @@ We now have a working Catalog Service, but you might have notices that we still 
 
 The UI team has asked us to include inventory information in the responses when calling the catalog service. However, the inventory information is owned by another team. The inventory team have agreed to expose a REST endpoint that we can use to collect inventory information.
 
-### Deploy the inventory service
+### Deploy the Inventory Service
 
 Our first task is to create the inventory service. The implementation are irrelevant, but we need to test and verify our deployment.
 
@@ -20,7 +20,9 @@ Check that inventory service is successfully rolled out.
 oc rollout status dc inventory
 ~~~
 
-Test the inventory endpoint
+Test the inventory endpoint:
+
+|**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~shell
 curl http://inventory-dev.{{APPS_HOSTNAME_SUFFIX}}/services/inventory/444434
@@ -37,7 +39,7 @@ The response from the curl command should look like this:
 
 Now that we know what the inventory service looks like and how to call it we can extend our catalog service to use it.
 
-### Creating the inventory model
+### Creating the Inventory Model
 
 We need a inventory model that matches the return from the inventory service so we start by creating a new Java class under `src/main/java/com/redhat/coolstore/model` called Inventory that looks like this:
 
@@ -52,7 +54,7 @@ public class Inventory {
 }
 ~~~
 
-### Creating the client
+### Creating the Client
 
 Spring Cloud has a client library called Feign that will save us a lot of boiler plate code. To implement a REST client in Feign all you have to do is to create a interface and annotate it with the necessary clients.
 
@@ -90,9 +92,9 @@ The `Feign` client will use the name to lookup a service from a service registry
 ribbon.listOfServers=mock.service.url:9999
 ~~~
 
-|**IMPORTANT:** Notice that this file is created in src/**test**/resources and not src/main/resources
+|**IMPORTANT:** Notice that this file is created in `src/test/resources` and not `src/main/resources`
 
-### Implementing a fallback strategy
+### Implementing a Fallback Strategy
 
 Calling an external service is easy, but we also have to consider what will happen if a service is not responding or if it's slow.  We will look closer at all that in then module `Fault tolerance and Resilience`, but we still have to consider a fallback strategy. What happens if the inventory client doesn't respond or respond with an error. There for we will update the `InventoryClient` to look like this:
 
@@ -193,7 +195,7 @@ Notice how we use a `@ClassRule` to create a mock service using `mock.service.ur
 
 We are now finally ready to run the test. :-) 
 
-Click on **View command palette** button up to the right
+Click on the **Command Palette** button up to the right
 ![View command palette button]({% image_path service-to-service-view-cmd-palette.png %})
 
 Then double click on the **TEST** command:
@@ -376,19 +378,25 @@ Then double click on the **TEST** command:
 
 If your test fails go back and check previous steps before moving to the next section.
 
-### Test the application locally
+### Test the Application Locally
 
 If you recall we had to set the list of servers to a hard coded value to run the unit test. If we want to run the test locally we will have to do the same and use the inventory service that we deployed to openshift before. We can do that by adding a environment specific configuration. Create a file called `src/main/resources/application-local.properties` with the following content:
+
+|**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~java
 ribbon.listOfServers=inventory-dev.{{APPS_HOSTNAME_SUFFIX}}
 ~~~
 
-### Deploy the application to OpenShift
+### Deploy the Application to OpenShift
 
 Before we deploy the new application we should update the settings for the ConfigMap to include a couple of things.
 
-Go to the [OpenShift console]({{OPENSHIFT_MASTER_URL}}){:target="openshift-console"} and login with developer/openshift.
+Go to the OpenShift Web Console and log in.
+
+* OpenShift Web Console: `{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
+* Username: `{{OPENSHIFT_USERNAME}}`
+* Password: `{{OPENSHIFT_PASSWORD}}`
 
 Click on **Catalog Dev** project
 
@@ -407,9 +415,6 @@ Click on **Action > Edit**
 TODO: Add screen shot of edit action
 
 Add the following lines to properties
-
-
-
 
 
 

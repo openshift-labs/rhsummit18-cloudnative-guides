@@ -1,4 +1,4 @@
-#### Create Production Environment
+#### Automate PROD Release
 
 
 Create secret for Git credentials:

@@ -1,4 +1,4 @@
-## Connect the Catalog service to Inventory Service.
+## Connect the Catalog Service to Inventory Service.
 
 We now have a working Catalog Service, but you might have notices that we still don't have inventory information. 
 

@@ -11,12 +11,12 @@ modules:
   config-management:
     name: Externalise Configuration
   bootstrap-prod:
-    name: Create Production Environment
+    name: Automate PROD Release
   release-prod:
-    name: Deploy New Version to Production
+    name: Push a Fix to PROD
   fault-tolerance:
     name: Fault Tolerance and Resilience
   test-automation:
     name: Test Automation
   env-info:
-    name: "Appendix: Lab Environment Info"
+    name: "Appendix: Lab Info"

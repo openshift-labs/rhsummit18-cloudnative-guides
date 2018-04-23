@@ -7,8 +7,8 @@ Lab guides for the Cloud-Native Lab at Red Hat Summit 2018
 You can deploy Workshopper as a container image anywhere but most conveniently, you can deploy it on OpenShift Online or other OpenShift flavours:
 
 ```
-$ oc new-app osevg/workshopper --name=myworkshop \
-      -e WORKSHOPS_URLS="https://raw.githubusercontent.com/siamaksade/workshopper-template/master/_workshop1.yml" \
+$ oc new-app osevg/workshopper --name=guides \
+      -e WORKSHOPS_URLS="https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master/_rhsummit18.yml" \
       -e JAVA_APP=false 
 $ oc expose svc/myworkshop
 ```

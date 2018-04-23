@@ -39,6 +39,8 @@ At this point, half of all access to the inventory service will go to `v1` and h
 to `v2`. Let's access the `product` service directly (which in turn calls the `inventory` service
 multiple times in parallel) and report the results:
 
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
 ~~~sh
 curl http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq
 ~~~
@@ -106,6 +108,8 @@ EOF
 ### Load test with circuit breaker
 
 Now let’s see what is the behavior is now:
+
+|**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~sh
 curl http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq
@@ -212,6 +216,8 @@ This is a special endpoint that will make our application return only `503`s.
 
 Throw some requests at the inventory endpoint:
 
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
 ~~~sh
 while true ; do
 curl http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
@@ -262,9 +268,11 @@ EOF
 
 Throw some requests at the customer endpoint, this time only outputting the quantity values:
 
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
 ~~~sh
 while true; do
-  curl -s http://catalog-prod.apps.127.0.0.1.nip.io/services/products | jq '.[].quantity'
+  curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[].quantity'
   sleep .1
   echo "---------"
   echo
@@ -346,9 +354,11 @@ EOF
 
 And repeat the quantity test:
 
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
 ~~~sh
 while true; do
-  curl -s http://catalog-prod.apps.127.0.0.1.nip.io/services/products | jq '.[].quantity'
+  curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[].quantity'
   sleep .1
   echo "---------"
   echo

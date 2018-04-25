@@ -1,0 +1,15 @@
+apiVersion: extensions/v1alpha2
+kind: RouteRule
+metadata:
+  name: inventory-v1-v2
+spec:
+  destination:
+    name: inventory
+  precedence: 1
+  route:
+  - labels:
+      version: v1
+    weight: 50
+  - labels:
+      version: v2
+    weight: 50

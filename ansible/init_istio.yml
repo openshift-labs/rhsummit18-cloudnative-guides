@@ -102,3 +102,7 @@
 - name: create istio ingress
   shell: "{{ openshift_cli }} create -f files/ingress.yml -n prod{{ project_suffix }}"
   ignore_errors: true
+
+- name: create istio prod inventory route
+  shell: "{{ openshift_cli }} create -f files/inventory-v1-v2.yml -n prod{{ project_suffix }}"
+  ignore_errors: true

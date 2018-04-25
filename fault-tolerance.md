@@ -1,23 +1,57 @@
-## Fault Tolerance and Service Resilience
+## The challenge with distributed computing
 
-In previous exercises you used Istio to intelligently route traffic
-to and between microservices in the service mesh. In this exercise you
-will use the fault tolerance and resiliency features of Istio to gracefully
-handle failing services due to overwhelming demand.
+As we transition our applications towards a distributed architecture with microservices deployed across a distributed
+network, Many new challenges await us.
 
-### Cause Trouble
+Technologies like containers and container orchestration platforms like OpenShift solve the deployment of our distributed
+applications quite well, but are still catching up to addressing the service communication necessary to fully take advantage
+of distributed applications, such as dealing with:
 
-In the `prod` project, there are two separate versions of the `inventory` service labelled
-`version:v1` and `version:v2`. The `v2` version has a built-in artifical delay of 2
-seconds, that we'll use later on.
+* Unpredictable failure modes
+* Verifying end-to-end application correctness
+* Unexpected system degradation
+* Continuous topology changes
+* The use of elastic/ephemeral/transient resources
+
+Today, developers are responsible for taking into account these challenges, and do things like:
+
+* Circuit breaking and Bulkheading (e.g. with Netfix Hystrix)
+* Timeouts/retries
+* Service discovery (e.g. with Eureka)
+* Client-side load balancing (e.g. with Netfix Ribbon)
+
+Another challenge is each runtime and language addresses these with different libraries and frameworks, and in
+some cases there may be no implementation of a particular library for your chosen language or runtime.
+
+## Improving the `inventory` service
+
+In this scenario we'll explore how to use a new project called _Istio_ to solve many of the challenges of modern
+distributed applications. In particular, our coolstore application suffers from problems when the load is high - although
+you improved the production environment in the last step using Jaeger tracing and improving the performance of the
+`catalog` service, the `inventory` service still suffers
+from occasional scaling problems when the load is high. Let's use Istio and its fault tolerance and resiliency
+features to gracefully handle the high load.
+
+### Observe Behavior
+
+In the **Coolstore PROD** project, there are two separate versions of the `inventory` service labelled
+`version:v1` and `version:v2`. The `v2` version has an artificial delay of 2
+seconds, which causes our catalog service and resulting UIs to be dangerously close to violating our SLA
+(Service Level Agreement) with our downstream vendors and customers. We'll use this later on. Here are the two
+versions as seen in the OpenShift console:
 
 ![V1V2]({% image_path inventory-v1-v2.png %}){:width="900px"}
 
-For now, let's round-robin route calls to either `v1` or `v2` in a 50/50 split:
+By default, our production environment has a rule in place which specifies a 50/50 split of traffic between
+`v1` and `v2`. Take a look at the rule:
 
 ~~~sh
-cat <<EOF | oc create -f -
-apiVersion: config.istio.io/v1alpha2
+oc get routerule/inventory-v1-v2 -o yaml
+~~~
+
+You will see the rule content which specify _weights_ for each service:
+
+~~~
 kind: RouteRule
 metadata:
   name: inventory-v1-v2
@@ -32,12 +66,11 @@ spec:
   - labels:
       version: v2
     weight: 50
-EOF
 ~~~
 
 At this point, half of all access to the inventory service will go to `v1` and half
-to `v2`. Let's access the `product` service directly (which in turn calls the `inventory` service
-multiple times in parallel) and report the results:
+to `v2`. Let's access the `catalog` service directly (which in turn calls the `inventory` service
+multiple times in parallel thanks to your work in the last exercise) and report the results:
 
 |**CAUTION:** Replace `GUID` with the guid provided to you.
 

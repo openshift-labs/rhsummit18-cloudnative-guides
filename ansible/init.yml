@@ -74,17 +74,17 @@
       tags: gogs
 
     # deploy guides
-    - import_role:
-        name: openshift_workshopper
-      vars:
-        project_name: "{{ lab_infra_project }}"
-        workshopper_content_url_prefix: "https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master"
-        workshopper_workshop_urls: "https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master/_rhsummit18.yml"
-        workshopper_env_vars:
-          PROJECT_SUFFIX: ""
-          GOGS_URL: http://{{ gogs_hostname }}
-          OPENSHIFT_DOCS_BASE: "https://docs.openshift.com/container-platform/3.9"
-      tags: guides
+    # - import_role:
+    #     name: openshift_workshopper
+    #   vars:
+    #     project_name: "{{ lab_infra_project }}"
+    #     workshopper_content_url_prefix: "https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master"
+    #     workshopper_workshop_urls: "https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master/_rhsummit18.yml"
+    #     workshopper_env_vars:
+    #       PROJECT_SUFFIX: ""
+    #       GOGS_URL: http://{{ gogs_hostname }}
+    #       OPENSHIFT_DOCS_BASE: "https://docs.openshift.com/container-platform/3.9"
+    #   tags: guides
 
     # deploy eclipse che
     - import_role:

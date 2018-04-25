@@ -92,7 +92,7 @@
       vars:
         project_name: "{{ lab_infra_project }}"
         #che_version: "6.3.0"
-        che_version: "nightly"
+        che_version: "latest"
         route_suffix: "{{ apps_hostname_suffix }}"
       tags: eclipse-che
 
@@ -103,7 +103,7 @@
       register: result
       until: result.status == 200
       retries: "30"
-      delay: "10"
+      delay: "60"
       tags: eclipse-che
 
     - name: create custom stack for jdk and openshift cli

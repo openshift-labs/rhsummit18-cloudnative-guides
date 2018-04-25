@@ -193,8 +193,7 @@ pipeline {
     }
     stage('Archive JAR') {
       steps {
-        //sh "mvn deploy -DskipTests"
-        echo "TODO: Deploy the file to the local Nexus repo"
+        sh "mvn deploy -Popenshift -DskipTests"
       }
     }
     stage('Build Image') {

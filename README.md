@@ -10,7 +10,7 @@ You can deploy Workshopper as a container image anywhere but most conveniently, 
 $ oc new-app osevg/workshopper --name=guides \
       -e WORKSHOPS_URLS="https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-guides/master/_rhsummit18.yml" \
       -e JAVA_APP=false 
-$ oc expose svc/myworkshop
+$ oc expose svc/guides
 ```
 
 The lab content (`.md` and `.adoc` files) will be pulled from the GitHub when users access the workshopper in 

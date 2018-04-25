@@ -5,7 +5,7 @@
 1. Go to the catalog page and see the timeout
 2. Look at a Jeager tracing to see the calls happen in serial mode
 
-## Parallelize the calls
+## Use parallel calls to the inventory
 
 1. Change the ProductEndpoint to do the calls to inventory in parallelStream
 2. Update the version tag in the catalog pom.xml to 2.0.0-SNAPSHOT

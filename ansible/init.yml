@@ -144,4 +144,12 @@
         {{ openshift_cli }} start-build catalog -n {{ lab_infra_project }}
       ignore_errors: true
       tags: populate-nexus
+    
+    # Populate inventory-dev template
+    - name: Install the inventory-dev template
+      include_tasks: init_template.yml
+      vars:
+        template_url: https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/inventory-dev-template.yml
+
+
 

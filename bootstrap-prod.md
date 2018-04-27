@@ -42,6 +42,7 @@ pipeline {
       steps {
         sh "git config --local user.email 'jenkins@cicd.com'"
         sh "git config --local user.name 'jenkins'"
+        sh "git checkout master"
 
         script {
           releaseTag = readMavenPom().getVersion().replace("-SNAPSHOT", "")

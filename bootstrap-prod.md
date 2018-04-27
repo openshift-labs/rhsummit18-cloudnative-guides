@@ -196,7 +196,7 @@ is deployed.
 Grant the service account which is used by Jenkins access to tag images and deploy pods in the production environment:
 
 ~~~shell
-oc policy add-role-to-user system:deployer system:serviceaccount:dev:jenkins -n prod{{ PROJECT_SUFFIX }}
+oc policy add-role-to-user admin system:serviceaccount:dev:jenkins -n prod{{ PROJECT_SUFFIX }}
 ~~~
 
 

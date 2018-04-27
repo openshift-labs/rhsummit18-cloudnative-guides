@@ -16,7 +16,5 @@ modules:
     name: Push a Fix to PROD
   fault-tolerance:
     name: Fault Tolerance and Resilience
-  test-automation:
-    name: Test Automation
   env-info:
     name: "Appendix: Lab Info"

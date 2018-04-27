@@ -26,5 +26,4 @@ modules:
   - bootstrap-prod
   - release-prod
   - fault-tolerance
-  - test-automation
   - env-info

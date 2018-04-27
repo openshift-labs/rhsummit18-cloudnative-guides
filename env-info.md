@@ -28,6 +28,15 @@ Git Server Web: <br/>
 Nexus Repository Manager: <br/>
 `{{ NEXUS_EXTERNAL_URL }}`{: style="color: blue"}
 
+Grafana: <br/>
+`{{ GRAFANA_URL }}`{: style="color: blue"}
+
+Jaeger Open Tracing: <br/>
+`{{ JAEGER_URL }}`{: style="color: blue"}
+
+Prometheus: <br/>
+`{{ PROMETHEUS_URL }}`{: style="color: blue"}
+
 OpenShift Docs: <br/>
 [{{ OPENSHIFT_DOCS_BASE }}]({{ OPENSHIFT_DOCS_BASE }}){:target="_blank"} 
 

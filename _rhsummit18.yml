@@ -16,6 +16,9 @@ vars:
   GIT_HOSTNAME: "gogs-lab-infra.apps-GUID.generic.opentlc.com"
   ECLIPSE_CHE_URL: "http://che-lab-infra.apps-GUID.generic.opentlc.com"
   NEXUS_EXTERNAL_URL: "http://nexus-lab-infra.apps-GUID.generic.opentlc.com"
+  GRAFANA_URL: "http://grafana-istio-system.apps-GUID.generic.opentlc.com"
+  JAEGER_URL: "http://jaeger-query-istio-system.apps-GUID.generic.opentlc.com"
+  PROMETHEUS_URL: "http://prometheus-istio-system.apps-GUID.generic.opentlc.com"
 
 modules:
   activate:

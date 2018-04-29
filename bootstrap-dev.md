@@ -46,19 +46,11 @@ your name and email and click on **Save**
 
 ![Eclipse Che - Git Config]({% image_path bootstrap-che-git-profile.png %}){:width="600px"}
 
-The source code for the Catalog service is available in the git server running on OpenShift:<br/>
-`http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`{: style="color: blue"} 
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
-
-
-
-In the project explorer pane, click on **Import Projects...** link and enter the Catalog git 
-repository url:<br/> 
+The source code for the Catalog service is available in the git server running on OpenShift. In the project 
+explorer pane, click on **Import Projects...** link and enter the Catalog git repository url:<br/> 
 `http://{{GIT_USERNAME}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`{: style="color: blue"} 
 
 |**CAUTION:** Replace `GUID` with the guid provided to you.
-
 
 <br/>
 

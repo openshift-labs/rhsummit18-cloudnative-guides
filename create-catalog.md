@@ -289,6 +289,30 @@ You should now see a page that list the content of the product catalog like this
 
 |**NOTE:** The current version of the application does not provide a inventory quantity number. We will look at that in the next section.
 
+### Adding CORS Headers
+Since our web-ui is hosted on a different route we will have to enable Cross-Origin Resource Service (CORS) for our application. This is a rather and we can enable it globally for our catalog service by adding an anonymous inner-class in `CatalogServiceApplication` that implements a `javax.servlet.Filter` interface like this: 
+
+~~~java
+    @Controller
+    class SimpleCORSFilter implements Filter {
+        public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+            HttpServletResponse response = (HttpServletResponse) res;
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
+            response.setHeader("Access-Control-Max-Age", "3600");
+            chain.doFilter(req, res);
+        }
+        public void init(FilterConfig filterConfig) {
+        }
+        public void destroy() {
+        }
+    }
+~~~
+
+|**STEP BY STEP:** Commit the changes and run the pipeline
+|![Step by step - Commit the changes and run the pipeline]({% image_path create-catalog-step-by-step-pipeline.gif %}){:width="640px"}
+
+|**NOTE:** The current version of the application does not make use of the PostgreSQL server. Instead it currently uses the H2 database. We will come back to that when we look at module `Externalize Configuration`
 
 ### Commit and push the first version of the application
 
@@ -308,13 +332,27 @@ Open the OpenShift and click on **Builds** > **Pipelines**: to watch the pipelin
 When the pipeline is completed, point your browser to the Catalog url deployed on OpenShift to access it:
 `http://catalog-dev.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}
 
-
 Note that you can find the Catalog url also in the project overview in the OpenShift Web Console.
 
-|**STEP BY STEP:** Commit the changes and run the pipeline
-|![Step by step - Commit the changes and run the pipeline]({% image_path create-catalog-step-by-step-pipeline.gif %}){:width="640px"}
+### Test the application using the Web-UI
 
-|**NOTE:** The current version of the application does not make use of the PostgreSQL server. Instead it currently uses the H2 database. We will come back to that when we look at module `Externalize Configuration`
+So far we have only been testing the catalog service alone, but wouldn't it be nice if we could actually see what the end-user will see as well. Let's go a head and deploy a WEB UI service to our **Catalog DEV** project by using a template that the Web-UI team has prepared for us.
+
+Run the following command in the terminal window:
+
+~~~shell
+oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/web-template.yml -n dev
+~~~
+
+To verify that the **web-ui** application is up we can either go to the console and check or run the following command:
+
+~~~shell
+oc rollout status dc  web-ui
+~~~
+
+When the rollout command reports `replication controller "web-ui-1" successfully rolled out` we are ready to test it.
+
+Paste the following URL (replacing the GUID) in a new browser window/tab `http://web-ui-dev.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}
 
 ### Summary
 

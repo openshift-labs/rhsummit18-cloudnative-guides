@@ -9,6 +9,8 @@ vars:
   OPENSHIFT_MASTER_URL: "https://master-GUID.generic.opentlc.com:8443"
   OPENSHIFT_USERNAME: "developer"
   OPENSHIFT_PASSWORD: "openshift"
+  OPENSHIFT_ADMIN_USERNAME: "admin"
+  OPENSHIFT_ADMIN_PASSWORD: "openshift"
   APPS_HOSTNAME_SUFFIX: "apps-GUID.generic.opentlc.com"
   PROJECT_SUFFIX: ""
   GIT_USERNAME: "developer"
@@ -16,6 +18,9 @@ vars:
   GIT_HOSTNAME: "gogs-lab-infra.apps-GUID.generic.opentlc.com"
   ECLIPSE_CHE_URL: "http://che-lab-infra.apps-GUID.generic.opentlc.com"
   NEXUS_EXTERNAL_URL: "http://nexus-lab-infra.apps-GUID.generic.opentlc.com"
+  GRAFANA_URL: "http://grafana-istio-system.apps-GUID.generic.opentlc.com"
+  JAEGER_URL: "http://jaeger-query-istio-system.apps-GUID.generic.opentlc.com"
+  PROMETHEUS_URL: "http://prometheus-istio-system.apps-GUID.generic.opentlc.com"
 
 modules:
   activate:

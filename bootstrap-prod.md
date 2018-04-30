@@ -42,6 +42,7 @@ pipeline {
       steps {
         sh "git config --local user.email 'jenkins@cicd.com'"
         sh "git config --local user.name 'jenkins'"
+        sh "git checkout master"
 
         script {
           releaseTag = readMavenPom().getVersion().replace("-SNAPSHOT", "")
@@ -196,17 +197,19 @@ is deployed.
 Grant the service account which is used by Jenkins access to tag images and deploy pods in the production environment:
 
 ~~~shell
-oc policy add-role-to-user system:deployer system:serviceaccount:dev:jenkins -n prod{{ PROJECT_SUFFIX }}
+oc policy add-role-to-user admin system:serviceaccount:dev:jenkins -n prod{{ PROJECT_SUFFIX }}
 ~~~
-
 
 #### Create OpenShift Pipeline
 
 You can now create an OpenShift Pipeline that uses the `Jenkinsfile.release` definition from the Catalog Git 
 repository to create a pipeline. 
 
-In the OpenShift Web Console go to the **Catalog DEV** project. Click on **Add to Project** > **Import YAML/JSON** and 
-paste the following pipeline definition:
+In the OpenShift Web Console go to the **Catalog DEV** project. Click on **Add to Project** > **Import YAML/JSON**.
+
+![Import YAML/JSON]({% image_path bootstrap-prod-import-yaml.png %}){:width="700px"}
+
+Then copy the following and paste in the field and then click on **Create**.
 
 |**CAUTION:** Replace `GUID` with the guid provided to you.
 
@@ -236,6 +239,8 @@ Click on **Create**.
 In the **Catalog DEV** project go to **Builds** > **Pipelines** and click on **Start Pipeline** near 
 the **catalog-release** pipeline.
 
+![Catalog Release Pipeline]({% image_path boostrap-prod-release-pipeline.png %}){:width="900px"}
+
 After the release pipeline is completed successfully (all green, yaay!), go the git repository in your browser to 
 review the Catalog release that is created in the Git repository:
 
@@ -244,6 +249,8 @@ review the Catalog release that is created in the Git repository:
 Git server web: <br/>
 `http://{{GIT_HOSTNAME}}/{{GIT_PASSWORD}}/catalog/releases`{: style="color: blue"} 
 
+![Catalog Git Releases]({% image_path boostrap-prod-git-releases.png %}){:width="900px"}
+
 Point your browser to the Nexus Maven Repository to review the binary release of 
 the Catalog service in form of a JAR file:
 
@@ -251,3 +258,9 @@ the Catalog service in form of a JAR file:
 
 Nexus Maven Repository: <br/>
 `{{NEXUS_EXTERNAL_URL}}/#browse/browse:maven-all-public:com%2Fredhat%2Fcoolstore%2Fcatalog`{: style="color: blue"} 
+
+![Catalog Released Artifacts in Nexus]({% image_path boostrap-prod-nexus-releases.png %}){:width="800px"}
+
+
+Go to the production environment, **CoolStore PROD** project, and click on the **web-ui** route url to verify 
+CoolStore application is working.

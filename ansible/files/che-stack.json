@@ -57,6 +57,15 @@
         }
       },
       {
+        "commandLine": "mvn verify -f ${current.project.path} -s ${current.project.path}/.settings.xml",
+        "name": "test",
+        "type": "mvn",
+        "attributes": {
+          "goal": "Test",
+          "previewUrl": ""
+        }
+      },
+      {
         "commandLine": "mvn spring-boot:run -f ${current.project.path} -s ${current.project.path}/.settings.xml",
         "name": "run",
         "type": "custom",

@@ -42,6 +42,16 @@ versions as seen in the OpenShift console:
 
 ![V1V2]({% image_path inventory-v1-v2.png %}){:width="900px"}
 
+In order to make changes to the traffic, you have to log in as admin:
+
+* OpenShift Admin User: `{{OPENSHIFT_ADMIN_USERNAME}}`
+* OpenShift Admin Password: `{{OPENSHIFT_ADMIN_PASSWORD}}`
+
+~~~sh
+oc login -u {{OPENSHIFT_ADMIN_USERNAME }}
+oc project prod{{PROJECT_SUFFIX}}
+~~~
+
 By default, our production environment has a rule in place which specifies a 50/50 split of traffic between
 `v1` and `v2`. Take a look at the rule:
 

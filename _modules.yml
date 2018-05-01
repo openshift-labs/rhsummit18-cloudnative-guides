@@ -13,7 +13,7 @@ modules:
   bootstrap-prod:
     name: Automate PROD Release
   release-prod:
-    name: Push a Fix to PROD
+    name: Distributed tracing
   fault-tolerance:
     name: Fault Tolerance and Resilience
   env-info:

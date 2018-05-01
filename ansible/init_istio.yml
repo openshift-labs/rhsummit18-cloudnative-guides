@@ -99,6 +99,14 @@
               {{ istio_dir.path }}/istio-{{ istio_version }}/bin/istioctl kube-inject {{ istio_options }} -f - | \
                   {{ openshift_cli }} apply -f - -n prod{{ project_suffix }}
 
+- name: Add jaeger tracing to the catalog in prod
+  shell: |
+    {{ openshift_cli }} env dc/catalog JAEGER_SERVICE_NAME=catalog \
+          JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14267/api/traces \
+          JAEGER_PROPAGATION=b3 \
+          JAEGER_SAMPLER_TYPE=const \
+          JAEGER_SAMPLER_PARAM=1
+
 - name: create istio ingress
   shell: "{{ openshift_cli }} create -f files/ingress.yml -n prod{{ project_suffix }}"
   ignore_errors: true

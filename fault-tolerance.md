@@ -32,166 +32,113 @@ you improved the production environment in the last step using Jaeger tracing an
 from occasional scaling problems when the load is high. Let's use Istio and its fault tolerance and resiliency
 features to gracefully handle the high load.
 
+### Introduce bad behavior
+
+In the **Coolstore PROD** project, let's scale up the `inventory` service to 2 pods:
+
+~~~sh
+oc scale dc/inventory --replicas=2
+oc get pods -l app=inventory
+~~~
+
+Wait for both pods to be in the `2/2 Ready` state:
+
+~~~
+oc get pods -l app=inventory
+
+NAME                READY     STATUS    RESTARTS   AGE
+inventory-1-fw9d9   2/2       Running   0          10m
+inventory-1-p9c7h   2/2       Running   0          13s
+~~~
+
+Now, let's make the 2nd pod misbehave (return `HTTP 503` errors when accessed). We'll use
+a special internal endpoint on the running pod to inject this fault.
+
+|**NOTE**: Replace the name of pod in the below `oc` command with the name of one of your pods!
+
+~~~sh
+oc rsh -c inventory inventory-2-75pxp curl http://localhost:8080/misbehave
+~~~
+
+At this point, you'll have two `inventory` pods, only one of which works. We should see this when
+we access the `inventory` service.
+
 ### Observe Behavior
 
-In the **Coolstore PROD** project, there are two separate versions of the `inventory` service labelled
-`version:v1` and `version:v2`. The `v2` version has an artificial delay of 2
-seconds, which causes our catalog service and resulting UIs to be dangerously close to violating our SLA
-(Service Level Agreement) with our downstream vendors and customers. We'll use this later on. Here are the two
-versions as seen in the OpenShift console:
-
-![V1V2]({% image_path inventory-v1-v2.png %}){:width="900px"}
-
-In order to make changes to the traffic, you have to log in as admin:
-
-* OpenShift Admin User: `{{OPENSHIFT_ADMIN_USERNAME}}`
-* OpenShift Admin Password: `{{OPENSHIFT_ADMIN_PASSWORD}}`
-
-~~~sh
-oc login -u {{OPENSHIFT_ADMIN_USERNAME }}
-oc project prod{{PROJECT_SUFFIX}}
-~~~
-
-By default, our production environment has a rule in place which specifies a 50/50 split of traffic between
-`v1` and `v2`. Take a look at the rule:
-
-~~~sh
-oc get routerule/inventory-v1-v2 -o yaml
-~~~
-
-You will see the rule content which specify _weights_ for each service:
-
-~~~
-kind: RouteRule
-metadata:
-  name: inventory-v1-v2
-spec:
-  destination:
-    name: inventory
-  precedence: 1
-  route:
-  - labels:
-      version: v1
-    weight: 50
-  - labels:
-      version: v2
-    weight: 50
-~~~
-
-At this point, half of all access to the inventory service will go to `v1` and half
-to `v2`. Let's access the `catalog` service directly (which in turn calls the `inventory` service
-multiple times in parallel thanks to your work in the last exercise) and report the results:
+At this point, due to the default load balancer, half of all access to the inventory service will go to the working
+pod and half to the broken pod. Let's access the `catalog` service directly (which in turn calls the `inventory` service). Let's
+call it 4 times, and output the inventory values from each call. 2 of the accesses should return value inventory values, and 2
+of them should fail (thanks to the misbehaving pod):
 
 |**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~sh
-curl http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq
+for i in $(seq 4); do
+    echo "Fetching Catalog attempt #${i}"
+    curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[] | [.quantity, .name] | @text'
+    echo ---------------------
+    echo
+done
 ~~~
 
 You should see output similar to this:
 
-~~~json
-[
-  {
-    "itemId": "329299",
-    "name": "Red Fedora",
-    "desc": "Official Red Hat Fedora",
-    "price": 34.99,
-    "quantity": 78
-  },
-  {
-    "itemId": "329199",
-    "name": "Forge Laptop Sticker",
-    "desc": "JBoss Community Forge Project Sticker",
-    "price": 8.5,
-    "quantity": 123
-  },
-  {
-    "itemId": "165613",
-    "name": "Solid Performance Polo",
-    "desc": "Moisture-wicking, antimicrobial 100% polyester design wicks for life of garment. No-curl, rib-knit collar; special collar band maintains crisp fold; three-button placket with dyed-to-match buttons; hemmed sleeves; even bottom with side vents; Import. Embroidery. Red Pepper.",
-    "price": 17.8,
-    "quantity": 303
-  },
+~~~
+Fetching Catalog attempt #1
+"[78,\"Red Fedora\"]"
+"[123,\"Forge Laptop Sticker\"]"
+"[303,\"Solid Performance Polo\"]"
+"[54,\"Ogio Caliber Polo\"]"
+"[407,\"16 oz. Vortex Tumbler\"]"
+"[343,\"Pebble Smart Watch\"]"
+"[85,\"Oculus Rift\"]"
+"[245,\"Lytro Camera\"]"
+--------------
+
+Fetching Catalog attempt #2
+"[-1,\"Red Fedora\"]"
+"[-1,\"Forge Laptop Sticker\"]"
+"[-1,\"Solid Performance Polo\"]"
+"[-1,\"Ogio Caliber Polo\"]"
+"[-1,\"16 oz. Vortex Tumbler\"]"
+"[-1,\"Pebble Smart Watch\"]"
+"[-1,\"Oculus Rift\"]"
+"[-1,\"Lytro Camera\"]"
+--------------
+
+Fetching Catalog attempt #3
+"[78,\"Red Fedora\"]"
+"[123,\"Forge Laptop Sticker\"]"
+"[303,\"Solid Performance Polo\"]"
+"[54,\"Ogio Caliber Polo\"]"
+"[407,\"16 oz. Vortex Tumbler\"]"
+"[343,\"Pebble Smart Watch\"]"
+"[85,\"Oculus Rift\"]"
+"[245,\"Lytro Camera\"]"
+--------------
+
+Fetching Catalog attempt #4
+"[-1,\"Red Fedora\"]"
+"[-1,\"Forge Laptop Sticker\"]"
+"[-1,\"Solid Performance Polo\"]"
+"[-1,\"Ogio Caliber Polo\"]"
+"[-1,\"16 oz. Vortex Tumbler\"]"
+"[-1,\"Pebble Smart Watch\"]"
+"[-1,\"Oculus Rift\"]"
+"[-1,\"Lytro Camera\"]"
+--------------
 ~~~
 
-All of the requests to the catalog were successful, but it took some time to run the test,
-as the `v2` inventory was a slow performer due to the artificial 2 second delay.
+Every other request to the inventory service failed and returned error, and our code in the `catalog` service replaced the inventory
+values with `-1`, as expected, due to the misbehaving pod returning `HTTP 503`.
 
-### Add Circuit Breaker
+### Add a Circuit Breaker
 
-Suppose that in a production system this 2s delay was caused by too many concurrent
+Suppose that in a production system these errors were caused by too many concurrent
 requests to the same instance/pod. We don’t want multiple requests getting queued or
 making the instance/pod even slower. So we’ll add an [istio circuit breaker](https://istio.io/docs/reference/config/istio.routing.v1alpha1.html#CircuitBreaker.SimpleCircuitBreakerPolicy)
-that will _open_ whenever we have more than 1 request being handled by any instance/pod.
-
-~~~sh
-cat <<EOF | oc create -f -
-apiVersion: config.istio.io/v1alpha2
-kind: DestinationPolicy
-metadata:
-  name: inventory-circuitbreaker
-spec:
-  destination:
-    name: inventory
-    labels:
-      version: v2
-  circuitBreaker:
-    simpleCb:
-      maxConnections: 1
-      httpMaxPendingRequests: 1
-      sleepWindow: 2m
-      httpDetectionInterval: 1s
-      httpMaxEjectionPercent: 100
-      httpConsecutiveErrors: 1
-      httpMaxRequestsPerConnection: 1
-EOF
-~~~
-
-### Load test with circuit breaker
-
-Now let’s see what is the behavior is now:
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
-
-~~~sh
-curl http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq
-  {
-    "itemId": "444434",
-    "name": "Pebble Smart Watch",
-    "desc": "Smart glasses and smart watches are perhaps two of the most exciting developments in recent years.",
-    "price": 24,
-    "quantity": 343
-  },
-  {
-    "itemId": "444435",
-    "name": "Oculus Rift",
-    "desc": "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Geekstakes Oculus Rift GiveawayNintendo marketed its Virtual Boy gaming system in 1995.Lytro",
-    "price": 106,
-    "quantity": -1
-  },
-  {
-    "itemId": "444436",
-    "name": "Lytro Camera",
-    "desc": "Consumers who want to up their photography game are looking at newfangled cameras like the Lytro Field camera, designed to take photos with infinite focus, so you can decide later exactly where you want the focus of each image to be.",
-    "price": 44.3,
-    "quantity": 245
-  }
-~~~
-
-You may need to run the command multiple times to trigger the circuit breaker, but
-you should see some errors (`inventory = -1`) being displayed in the results. That’s the circuit breaker being
-opened whenever Istio detects more than 1 pending request being handled by the
-instance/pod. The difference here is that once the circuit is opened, calls to the
-service will _fail fast_, so you'll still get errors but much quicker.
-
-Remove the circuit breaker before continuing:
-
-~~~sh
-oc delete destinationpolicy inventory-circuitbreaker
-~~~
-
-### Pool ejection
+that will _open_ whenever we have more than 1 request being handled by any instance/pod. When the
+circuit is broken for a given pod, we want to _eject_ the pod out of the load balancing pool.
 
 Pool ejection or outlier detection is a resilience strategy that takes place whenever
 we have a pool of instances/pods to serve a client request. If the request is forwarded
@@ -200,104 +147,51 @@ this instance from the pool for a certain sleep window. In our example the sleep
 is configured to be 15s. This increases the overall availability by making sure that
 only healthy pods participate in the pool of instances.
 
-#### Scale `v2` instances
+Let's add a circuit breaker with pool ejection action. To create Istio circuit breakers you'll need
+admin privileges, so login as the admin user:
 
-To test pool ejection, let's add some pods to the `v2` pool:
-
-~~~sh
-oc scale dc/inventory-v2 --replicas=2
-oc get pods -w
-~~~
-
-Wait for all pods to be in the `2/2 Ready` state:
-
-~~~console
-oc get pods -l app=inventory
-
-NAME                   READY     STATUS    RESTARTS   AGE
-inventory-v1-1-x95c2   2/2       Running   0          9h
-inventory-v2-2-75pxp   2/2       Running   0          3m
-inventory-v2-2-bfqmc   2/2       Running   0          38s
-~~~
-
-We still have 50/50 load balancing between the two different versions of the
-inventory service. And within version `v2`, some requests
-are handled by one pod and some requests are handled by the other pod.
-
-### Test behavior with failing instance and without pool ejection
-
-Let’s get the name of the pods from inventory v2:
+* OpenShift Admin User: `{{OPENSHIFT_ADMIN_USERNAME}}`
+* OpenShift Admin Password: `{{OPENSHIFT_ADMIN_PASSWORD}}`
 
 ~~~sh
-oc get pods -l app=inventory,version=v2
-~~~
-You should see something like this:
-
-~~~console
-NAME                   READY     STATUS    RESTARTS   AGE
-inventory-v2-2-75pxp   2/2       Running   0          4m
-inventory-v2-2-bfqmc   2/2       Running   0          1m
+oc login -u {{OPENSHIFT_ADMIN_USERNAME }} -p {{OPENSHIFT_ADMIN_PASSWORD}}
+oc project prod{{PROJECT_SUFFIX}}
 ~~~
 
-Now we’ll get into one the pods and add some erratic behavior on it.
-Get one of the pod names from above and replace on the following
-command accordingly:
+Istio circuit breakers operate by setting policies on _routes_ to specific backends. For this to work,
+we need to first create an Istio _RouteRule_ that sends 100% of the traffic to our `inventory` backend:
 
 ~~~sh
-oc rsh -c inventory inventory-v2-2-bfqmc
+cat <<EOF | oc create -f -
+apiVersion: config.istio.io/v1alpha2
+kind: RouteRule
+metadata:
+  name: inventory-v1-route
+spec:
+  destination:
+    name: inventory
+  precedence: 1
+  route:
+  - labels:
+      version: v1
+    weight: 100
+EOF
 ~~~
 
-You will be inside the application container of your pod (mine is named `inventory-v2-2-bfqmc` but yours will be different).
-Now execute:
-
-~~~sh
-curl localhost:8080/misbehave
-exit
-~~~
-
-This is a special endpoint that will make our application return only `503`s.
-
-Throw some requests at the inventory endpoint:
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
-
-~~~sh
-while true ; do
-curl http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
-sleep .1
-done
-~~~
-
-You’ll see that whenever the misbehaving pod receives a request, you get a 503 error
-and associated `-1` for the inventory value:
-
-~~~json
-  ...
-  {
-    "itemId": "165954",
-    "name": "16 oz. Vortex Tumbler",
-    "desc": "Double-wall insulated, BPA-free, acrylic cup. Push-on lid with thumb-slide closure; for hot and cold beverages. Holds 16 oz. Hand wash only. Imprint. Clear.",
-    "price": 6,
-    "quantity": -1
-  },
-  ...
-~~~
-
-### Test behavior with failing instance and with pool ejection
-
-Now let’s add the pool ejection behavior:
+Now, add the circuit breaker by creating an Istio [Destination Policy](https://istio.io/docs/concepts/traffic-management/rules-configuration.html#destination-policies) which
+is used to create circuit breakers:
 
 ~~~sh
 cat <<EOF | oc create -f -
 apiVersion: config.istio.io/v1alpha2
 kind: DestinationPolicy
 metadata:
-  name: inventory-poolejector-v2
+  name: inventory-poolejector
 spec:
   destination:
     name: inventory
     labels:
-      version: v2
+      version: v1
   loadBalancing:
     name: RANDOM
   circuitBreaker:
@@ -309,49 +203,60 @@ spec:
 EOF
 ~~~
 
-Throw some requests at the customer endpoint, this time only outputting the quantity values:
+### Test behavior with failing instance
+
+Throw some requests at the catalog endpoint, this time only outputting the quantity values:
 
 |**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~sh
 while true; do
-  curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[].quantity'
-  sleep .1
-  echo "---------"
-  echo
+    echo "Fetching Catalog..."
+    curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[] | [.quantity, .name] | @text'
+    echo ---------------------
+    echo
+    sleep 5
 done
 ~~~
 
-~~~console
----------
+Press `CTRL-C` after a few seconds to stop the loop.
 
-78
-123
-303
-54
-407
-343
-85
-245
----------
+You will notice that there is still 1 failure in the above (inventory=`-1`). This is because
+the misbehaving pod is accessed once, fails, and is immediately ejected from the load balancing
+pool for the specified time (15 seconds). If you immediately run the above `while` loop again,
+you'll not see any errors. If you wait out the pool ejection timeout period (15 seconds) and run
+it again, you'll again see a single failure followed by success. This is the circuit breaker in action!
 
-78
-123
--1
-54
-407
-343
-85
-245
----------
+You can verify that the failing pod was indeed ejected by looking at the internal Istio proxy (Envoy)
+statistics for the `catalog` pod. First, get the pod name:
+
+~~~sh
+oc get pods -l app=catalog
+
+NAME                         READY     STATUS    RESTARTS   AGE
+catalog-2-p5q4d              2/2       Running   0          57m
 ~~~
 
+Replace `[CATALOG_POD_NAME]` with your catalog's pod name in the below command:
 
-You will see that whenever you get a failing request with 503 from the failing pod
-it gets ejected from the pool, and it doesn’t receive any more requests until the
-sleep window expires - which takes at least 15s. Watch closely, every 15s you'll see a
-`-1` quantity indicating that the sleep window expired and the failing pod was placed
-back in service, and then immediately fail and be re-ejected!
+~~~sh
+~  % oc rsh -c catalog [CATALOG_POD_NAME] curl localhost:15000/stats|grep outlier | sed 's/^.*outlier_detection.//g'
+ejections_active: 1
+ejections_consecutive_5xx: 14
+ejections_detected_consecutive_5xx: 14
+ejections_detected_consecutive_gateway_failure: 0
+ejections_detected_success_rate: 0
+ejections_enforced_consecutive_5xx: 14
+ejections_enforced_consecutive_gateway_failure: 0
+ejections_enforced_success_rate: 0
+ejections_enforced_total: 14
+ejections_overflow: 0
+ejections_success_rate: 0
+ejections_total: 14
+~~~
+
+You can see that Envoy is reporting `1` active ejection (and if you run the `while` loop enough, the value
+of `ejections_total` and other values will go up as Envoy is tracking the # of total lifetime failures).
 
 ### Ultimate resilience with retries, circuit breaker, and pool ejection
 
@@ -359,24 +264,26 @@ Even with pool ejection your application doesn’t look that resilient. That’s
 because we’re still letting some errors (`quantity = -1`) to be propagated to our clients. But we can
 improve this. If we have enough instances and/or versions of a specific service
 running into our system, we can combine multiple Istio capabilities to achieve
-the ultimate backend resilience: - Circuit Breaker to avoid multiple concurrent
-requests to an instance; - Pool Ejection to remove failing instances from the pool
-of responding instances; - Retries to forward the request to another instance just
-in case we get an open circuit breaker and/or pool ejection;
+the ultimate backend resilience:
 
-By simply adding a retry configuration to our current routerule, we’ll be able to get
+* Circuit Breaker to avoid multiple concurrent requests to an instance
+* Pool Ejection to remove failing instances from the pool of responding instances
+* Retries to forward the request to another instance just in case we get an open circuit breaker and/or pool ejection;
+
+By simply adding a retry configuration to Istio, we’ll be able to get
 rid completely of our `503`s requests and `inventory = -1` failures. This means that whenever we receive a failed
 request from an ejected instance, Istio will forward the request to another supposedly
 healthy instance.
 
-Put the retry rule into effect:
+Put the retry rule into effect by replacing the default route created earlier with an updated route which contains
+a retry policy:
 
 ~~~sh
 cat <<EOF | oc replace -f -
 apiVersion: config.istio.io/v1alpha2
 kind: RouteRule
 metadata:
-  name: inventory-v1-v2
+  name: inventory-v1-route
 spec:
   destination:
     name: inventory
@@ -384,10 +291,7 @@ spec:
   route:
   - labels:
       version: v1
-    weight: 50
-  - labels:
-      version: v2
-    weight: 50
+    weight: 100
   httpReqRetries:
     simpleRetry:
       perTryTimeout: 1s
@@ -401,22 +305,35 @@ And repeat the quantity test:
 
 ~~~sh
 while true; do
-  curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[].quantity'
-  sleep .1
-  echo "---------"
-  echo
+    echo "Fetching Catalog..."
+    curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[] | [.quantity, .name] | @text'
+    echo ---------------------
+    echo
+    sleep 5
 done
 ~~~
 
-You won’t receive any -1 inventories anymore. But the requests from `inventory:v2` are still taking more time to get a response:
-
+You won’t receive any -1 inventories anymore, no matter how long you let it run.
 When our misbehaving pod returns a failure, Istio kicks it out of the load balancing pool and retries,
-which the working pods are able to handle thanks to pool ejection and retry!
+which the working pods are able to handle thanks to pool ejection and retry. Your application is now much
+more resiliant in the face of overwhelming load and misbehaving infrastructure!
+
+You can verify the retry is happening by once again looking at the Envoy statistics:
+
+~~~sh
+oc rsh -c catalog catalog-2-p5q4d curl localhost:15000/stats|grep inventory|grep upstream_rq_retry
+
+cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry: 1
+cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry_overflow: 0
+cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry_success: 1
+~~~
+
+Notice the values of `upstream_rq_retry` and `upstream_rq_retry_success` indicate that one or more retries were
+attempted, and they were successful.
 
 ### Clean up
 
 ~~~sh
-oc delete dc/recommendation-v2
 oc delete routerule --all
 oc delete destinationpolicy --all
 ~~~

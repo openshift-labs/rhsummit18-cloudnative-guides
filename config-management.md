@@ -14,9 +14,10 @@ database container.
 As part of this lab, a PostgreSQL database has already been deployed, which you can see:
 
 ~~~console
-$ oc get pods
+$ oc get pods -l app=catalog
 NAME                         READY     STATUS    RESTARTS   AGE
-catalog-postgresql-1-kbs84   1/1       Running   0          2d
+catalog-2-cb9lk              1/1       Running   0          6m
+catalog-postgresql-1-c4rsm   1/1       Running   0          41m
 ~~~
 
 Our Spring Boot Catalog application configuration is provided via a properties filed called `application-default.properties`
@@ -52,7 +53,7 @@ Let's modify our application to use it. We will use the [Spring Cloud Kubernetes
 project. Using this dependency, Spring Boot will search for a ConfigMap (by default with the same name as
 the application) to use as the source of application configuration during application bootstrapping and
 if enabled, triggers hot reloading of beans or Spring context when changes are detected on the ConfigMap.
-We'll use auto-reload later, but for now, add the following dependency to your `pom.xml` beneath the existing
+Add the following dependency to your `pom.xml` beneath the existing
 dependencies (look for the `<!-- add additional dependencies -->` comment):
 
 ~~~xml
@@ -74,18 +75,18 @@ ConfigMaps. To grant this permission, run:
 oc policy add-role-to-user view -n dev -z default
 ~~~
 
-Next,
-Re-run the unit tests to ensure they still pass:
+Let's re-run our tests just to make sure our new additions don't cause breakage:
 
-~~~console
-$ mvn verify
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 24.662 s
-[INFO] Finished at: 2018-04-06T16:17:33-04:00
-[INFO] Final Memory: 36M/327M
-[INFO] ------------------------------------------------------------------------
-~~~
+Click on **View command palette** button up to the right
+![View command palette button]({% image_path service-to-service-view-cmd-palette.png %})
+
+Then double click on the **TEST** command:
+![View command palette test button]({% image_path service-to-service-cmd-palette.png %})
+
+At the end of the output you should see `Tests run: 2, Failures: 0, Errors: 0, Skipped: 0`
+and finally `BUILD SUCCESS`.
+
+If your test fails go back and check previous steps before moving to the next section.
 
 ### Commit code changes
 
@@ -97,70 +98,81 @@ Commit the `pom.xml` changes to code repo:
 * Check the "Push commit changes to..."
 * Click on "Commit"
 
-This will trigger the pipeline build. Wait for it to complete. At this point the application
+This will trigger the pipeline build.
+
+Open the OpenShift Web Console and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the updated catalog code:
+`{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
+
+|**CAUTION:** Replace `GUID` with the guid provided to you.
+
+![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
+
+|**NOTE:** If your pipeline is not triggered, you may have forgotten to *Push* the changes after commit. In that case, simply use the `Git -> Remotes -> Push...` menu to push the committed changes.
+
+Wait for it to complete. At this point the application
 should fetch the configuration and start using PostgreSQL instead of H2.
 
 ### Verify configuration
 
-When the Catalog pod is ready, verify that the PostgreSQL database is being
-used. Check the Catalog pod logs:
+Let's verify that PostgreSQL is being used. First, let's dump the database contents by
+running the `psql` utility command from within the PostgreSQL container to verify that the seed data is loaded:
 
 ~~~sh
-oc logs dc/catalog | grep hibernate.dialect
-~~~
-
-You would see the **PostgreSQL94Dialect** is selected by Hibernate in the logs:
-
-~~~console
-2017-08-10 21:07:51.670  INFO 1 --- [           main] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.PostgreSQL94Dialect
-~~~
-
-You can also connect to the Catalog PostgreSQL database and verify that the seed data is loaded:
-
-~~~sh
-oc rsh dc/catalog-postgresql
-~~~
-
-Once connected to the PostgreSQL container, run the following:
-
-> Run this command inside the Catalog PostgreSQL container, after opening a remote shell to it.
-
-~~~sh
-psql -U $POSTGRESQL_USER -d $POSTGRESQL_DATABASE -c "select itemId, name, price from catalog"
+oc rsh dc/catalog-postgresql /bin/bash -c \
+  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"select itemId, name, price from catalog\""
 ~~~
 
 You should see the seed data gets listed.
 
 ~~~
- itemid |            name             | price
-----------------------------------------------
- 329299 | Red Fedora                  | 34.99
- 329199 | Forge Laptop Sticker        |   8.5
- ...
+ itemid |          name          | price
+--------+------------------------+-------
+ 329299 | Red Fedora             | 34.99
+ 329199 | Forge Laptop Sticker   |   8.5
+ 165613 | Solid Performance Polo |  17.8
+ 165614 | Ogio Caliber Polo      | 28.75
+ 165954 | 16 oz. Vortex Tumbler  |     6
+ 444434 | Pebble Smart Watch     |    24
+ 444435 | Oculus Rift            |   106
+ 444436 | Lytro Camera           |  44.3
+(8 rows)
 ~~~
 
-Exit the container shell.
+Now let's do a quick update of the price of the _Lytro Camera_ product to make it cost 100.00 by referring to its
+itemid of `444436`:
+
+~~~sh
+oc rsh dc/catalog-postgresql /bin/bash -c \
+  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"update catalog set price=100.0 where itemid='444436'\""
+~~~
+
+You will see a returned message of `UPDATE 1` indicating that the price was updated in Postgres. Let's re-fetch the catalog
+and verify the new price:
+
+~~~sh
+oc rsh dc/catalog-postgresql /bin/bash -c \
+  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"select itemId, name, price from catalog\""
+~~~
+
+The _Lytro Camera_ product should now cost `100`:
 
 ~~~
-exit
+ itemid |          name          | price
+--------+------------------------+-------
+ 329299 | Red Fedora             | 34.99
+ 329199 | Forge Laptop Sticker   |   8.5
+ 165613 | Solid Performance Polo |  17.8
+ 165614 | Ogio Caliber Polo      | 28.75
+ 165954 | 16 oz. Vortex Tumbler  |     6
+ 444434 | Pebble Smart Watch     |    24
+ 444435 | Oculus Rift            |   106
+ 444436 | Lytro Camera           |   100  <----- New price!
 ~~~
-
-### Test the result on OpenShift
-
-  APPS_HOSTNAME_SUFFIX: "apps.GUID.generic.opentlc.com"
-
-Test the catalog running on OpenShift:
-
-`open http://catalog-dev.{{APPS_HOSTNAME_SUFFIX}}`
-
-Observe all products are present!
 
 ### Congratulations!
 
 You've now got a quick way to alter service configuration without redeploying! As the application moves
 through different environments (test, staging, production), it will pick up its configuration via a
-ConfigMap within each environment, rather than being re-compiled with the new configuration each time.
-
+[ConfigMap](https://docs.openshift.org/latest/dev_guide/configmaps.html) within each environment, rather than being re-compiled with the new configuration each time.
 This mechanism can also be used to alter business logic in addition to infrastructure (database, etc)
-configuration. We'll employ this later in in the Fault Tolerance exercise to do a custom feature toggle
-for our services.
+configuration.

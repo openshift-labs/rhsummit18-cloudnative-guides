@@ -3,11 +3,7 @@
 As a developer you have been tasked with creating a catalog service that exposes a REST API to 
 read from the product catalog database.
 
-<<<<<<< HEAD
 The catalog service is part of the a microservices architectured application called CoolStore. 
-=======
-The catalog service is part of the a microservice architectured application called **CoolStore**.
->>>>>>> e05c74a8e0390b70f6f01e6e945dc7331069847c
 
 ![CoolStore Microservices]({% image_path create-catalog-coolstore.png %}){:width="900px"}
 

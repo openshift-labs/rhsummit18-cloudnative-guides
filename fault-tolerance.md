@@ -35,7 +35,7 @@ letting Istio handle failures at a lower, application infrastructure level.
 
 ### Introduce bad behavior
 
-In the **Coolstore PROD** project, let's scale up the `inventory` service to 2 pods since we want to be able to handle
+In the **CoolStore PROD** project, let's scale up the `inventory` service to 2 pods since we want to be able to handle
 more load in our production application.
 
 ~~~sh

@@ -30,15 +30,17 @@ distributed applications. In particular, our coolstore application suffers from 
 you improved the production environment in the last step using Jaeger tracing and improving the performance of the
 `catalog` service, the `inventory` service still suffers
 from occasional scaling problems when the load is high. Let's use Istio and its fault tolerance and resiliency
-features to gracefully handle the high load.
+features to gracefully handle the high load. Notice that we aren't making **any changes to the application itself**,
+letting Istio handle failures at a lower, application infrastructure level.
 
 ### Introduce bad behavior
 
-In the **CoolStore PROD** project, let's scale up the `inventory` service to 2 pods:
+In the **CoolStore PROD** project, let's scale up the `inventory` service to 2 pods since we want to be able to handle
+more load in our production application.
 
 ~~~sh
+oc project prod{{PROJECT_SUFFIX}}
 oc scale dc/inventory --replicas=2
-oc get pods -l app=inventory
 ~~~
 
 Wait for both pods to be in the `2/2 Ready` state:
@@ -47,17 +49,15 @@ Wait for both pods to be in the `2/2 Ready` state:
 oc get pods -l app=inventory
 
 NAME                READY     STATUS    RESTARTS   AGE
-inventory-1-fw9d9   2/2       Running   0          10m
-inventory-1-p9c7h   2/2       Running   0          13s
+inventory-2-fw9d9   2/2       Running   0          10m
+inventory-2-p9c7h   2/2       Running   0          13s
 ~~~
 
-Now, let's make the 2nd pod misbehave (return `HTTP 503` errors when accessed). We'll use
+Now, let's make one of the pods misbehave (return `HTTP 503` errors when accessed). We'll use
 a special internal endpoint on the running pod to inject this fault.
 
-|**NOTE**: Replace the name of pod in the below `oc` command with the name of one of your pods!
-
 ~~~sh
-oc rsh -c inventory inventory-2-75pxp curl http://localhost:8080/misbehave
+oc rsh -c inventory $(oc get pods -l app=inventory -o name | head -1) curl http://localhost:8080/misbehave
 ~~~
 
 At this point, you'll have two `inventory` pods, only one of which works. We should see this when
@@ -66,71 +66,47 @@ we access the `inventory` service.
 ### Observe Behavior
 
 At this point, due to the default load balancer, half of all access to the inventory service will go to the working
-pod and half to the broken pod. Let's access the `catalog` service directly (which in turn calls the `inventory` service). Let's
-call it 4 times, and output the inventory values from each call. 2 of the accesses should return value inventory values, and 2
-of them should fail (thanks to the misbehaving pod):
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
+pod and half to the broken pod. Let's access the `catalog` service directly (which in turn calls the `inventory` service). We
+will use the `siege` command line utility to repeatedly call the service. Half of the accesses should fail (thanks to the misbehaving pod):
 
 ~~~sh
-for i in $(seq 4); do
-    echo "Fetching Catalog attempt #${i}"
-    curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[] | [.quantity, .name] | @text'
-    echo ---------------------
-    echo
-done
+siege -c 1 -r 10 http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
-You should see output similar to this:
+You should see output similar to this (you'll see the `HTTP/1.1 500` for the failed invocations of the `catalog` service
+and you'll see `Availability: 50.00%` and 5 successful transactions and 5 failed, indicating half the accesses failed):
 
 ~~~
-Fetching Catalog attempt #1
-"[78,\"Red Fedora\"]"
-"[123,\"Forge Laptop Sticker\"]"
-"[303,\"Solid Performance Polo\"]"
-"[54,\"Ogio Caliber Polo\"]"
-"[407,\"16 oz. Vortex Tumbler\"]"
-"[343,\"Pebble Smart Watch\"]"
-"[85,\"Oculus Rift\"]"
-"[245,\"Lytro Camera\"]"
---------------
+** SIEGE 4.0.2
+** Preparing 1 concurrent users for battle.
+The server is now under siege...
+HTTP/1.1 200     0.26 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 500     0.03 secs:     240 bytes ==> GET  /services/products
+HTTP/1.1 200     0.01 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 500     0.03 secs:     240 bytes ==> GET  /services/products
+HTTP/1.1 200     0.01 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 500     0.01 secs:     240 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 500     0.02 secs:     240 bytes ==> GET  /services/products
+HTTP/1.1 200     0.01 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 500     0.02 secs:     240 bytes ==> GET  /services/products
 
-Fetching Catalog attempt #2
-"[-1,\"Red Fedora\"]"
-"[-1,\"Forge Laptop Sticker\"]"
-"[-1,\"Solid Performance Polo\"]"
-"[-1,\"Ogio Caliber Polo\"]"
-"[-1,\"16 oz. Vortex Tumbler\"]"
-"[-1,\"Pebble Smart Watch\"]"
-"[-1,\"Oculus Rift\"]"
-"[-1,\"Lytro Camera\"]"
---------------
+Transactions:                      5 hits
+Availability:                  50.00 %
+Elapsed time:                   2.64 secs
+Data transferred:               0.01 MB
+Response time:                  0.08 secs
+Transaction rate:               1.89 trans/sec
+Throughput:                     0.00 MB/sec
+Concurrency:                    0.16
+Successful transactions:           5
+Failed transactions:               5
+Longest transaction:            0.26
+Shortest transaction:           0.01
 
-Fetching Catalog attempt #3
-"[78,\"Red Fedora\"]"
-"[123,\"Forge Laptop Sticker\"]"
-"[303,\"Solid Performance Polo\"]"
-"[54,\"Ogio Caliber Polo\"]"
-"[407,\"16 oz. Vortex Tumbler\"]"
-"[343,\"Pebble Smart Watch\"]"
-"[85,\"Oculus Rift\"]"
-"[245,\"Lytro Camera\"]"
---------------
-
-Fetching Catalog attempt #4
-"[-1,\"Red Fedora\"]"
-"[-1,\"Forge Laptop Sticker\"]"
-"[-1,\"Solid Performance Polo\"]"
-"[-1,\"Ogio Caliber Polo\"]"
-"[-1,\"16 oz. Vortex Tumbler\"]"
-"[-1,\"Pebble Smart Watch\"]"
-"[-1,\"Oculus Rift\"]"
-"[-1,\"Lytro Camera\"]"
---------------
 ~~~
 
-Every other request to the inventory service failed and returned error, and our code in the `catalog` service replaced the inventory
-values with `-1`, as expected, due to the misbehaving pod returning `HTTP 503`.
+Not good!
 
 ### Add a Circuit Breaker
 
@@ -205,42 +181,56 @@ EOF
 
 ### Test behavior with failing instance
 
-Throw some requests at the catalog endpoint, this time only outputting the quantity values:
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
+Repeat the test from above:
 
 ~~~sh
-while true; do
-    echo "Fetching Catalog..."
-    curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[] | [.quantity, .name] | @text'
-    echo ---------------------
-    echo
-    sleep 5
-done
+siege -c 1 -r 10 http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
-Press `CTRL-C` after a few seconds to stop the loop.
+You will see:
 
-You will notice that there is still 1 failure in the above (inventory=`-1`). This is because
+~~~
+** SIEGE 4.0.4
+** Preparing 1 concurrent users for battle.
+The server is now under siege...
+HTTP/1.1 500     0.05 secs:     240 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.01 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.05 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+HTTP/1.1 200     0.02 secs:    2147 bytes ==> GET  /services/products
+
+Transactions:		           9 hits
+Availability:		       90.00 %
+Elapsed time:		        0.25 secs
+Data transferred:	        0.02 MB
+Response time:		        0.03 secs
+Transaction rate:	       36.00 trans/sec
+Throughput:		        0.07 MB/sec
+Concurrency:		        1.00
+Successful transactions:           9
+Failed transactions:	           1
+Longest transaction:	        0.05
+Shortest transaction:	        0.01
+~~~
+
+You will notice that there is still 1 failure in the above output (the first or second one). This is because
 the misbehaving pod is accessed once, fails, and is immediately ejected from the load balancing
-pool for the specified time (15 seconds). If you immediately run the above `while` loop again,
+pool for the specified time (15 seconds). If you immediately run the test again,
 you'll not see any errors. If you wait out the pool ejection timeout period (15 seconds) and run
 it again, you'll again see a single failure followed by success. This is the circuit breaker in action!
 
 You can verify that the failing pod was indeed ejected by looking at the internal Istio proxy (Envoy)
-statistics for the `catalog` pod. First, get the pod name:
+statistics for the `catalog` pod:
 
 ~~~sh
-oc get pods -l app=catalog
 
-NAME                         READY     STATUS    RESTARTS   AGE
-catalog-2-p5q4d              2/2       Running   0          57m
-~~~
+oc rsh -c catalog $(oc get pods -l app=catalog -o name | head -1) curl localhost:15000/stats|grep outlier | sed 's/^.*outlier_detection.//g'
 
-Replace `[CATALOG_POD_NAME]` with your catalog's pod name in the below command:
-
-~~~sh
-~  % oc rsh -c catalog [CATALOG_POD_NAME] curl localhost:15000/stats|grep outlier | sed 's/^.*outlier_detection.//g'
 ejections_active: 1
 ejections_consecutive_5xx: 14
 ejections_detected_consecutive_5xx: 14
@@ -255,7 +245,7 @@ ejections_success_rate: 0
 ejections_total: 14
 ~~~
 
-You can see that Envoy is reporting `1` active ejection (and if you run the `while` loop enough, the value
+You can see that Envoy is reporting `ejections_active: 1` (and if you run the test enough, the value
 of `ejections_total` and other values will go up as Envoy is tracking the # of total lifetime failures).
 
 ### Ultimate resilience with retries, circuit breaker, and pool ejection
@@ -299,29 +289,23 @@ spec:
 EOF
 ~~~
 
-And repeat the quantity test:
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
+And repeat the test:
 
 ~~~sh
-while true; do
-    echo "Fetching Catalog..."
-    curl -s http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products | jq '.[] | [.quantity, .name] | @text'
-    echo ---------------------
-    echo
-    sleep 5
-done
+siege -c 1 -r 10 http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
-You won’t receive any -1 inventories anymore, no matter how long you let it run.
-When our misbehaving pod returns a failure, Istio kicks it out of the load balancing pool and retries,
-which the working pods are able to handle thanks to pool ejection and retry. Your application is now much
+You won’t receive any failures, no matter how long you let it run. You can also increase the number of iterations by replacing
+`-r 10` with something more, say, `-r 1000`.
+
+When our misbehaving pod returns a failure, Istio kicks it out of the load balancing pool and retries the request
+to `inventory`, which the working pods are able to handle thanks to pool ejection and retry. Your application is now much
 more resiliant in the face of overwhelming load and misbehaving infrastructure!
 
 You can verify the retry is happening by once again looking at the Envoy statistics:
 
 ~~~sh
-oc rsh -c catalog catalog-2-p5q4d curl localhost:15000/stats|grep inventory|grep upstream_rq_retry
+oc rsh -c catalog $(oc get pods -l app=catalog -o name | head -1) curl localhost:15000/stats|grep inventory.prod|grep upstream_rq_retry
 
 cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry: 1
 cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry_overflow: 0
@@ -330,13 +314,6 @@ cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry_s
 
 Notice the values of `upstream_rq_retry` and `upstream_rq_retry_success` indicate that one or more retries were
 attempted, and they were successful.
-
-### Clean up
-
-~~~sh
-oc delete routerule --all
-oc delete destinationpolicy --all
-~~~
 
 ## Congratulations!
 

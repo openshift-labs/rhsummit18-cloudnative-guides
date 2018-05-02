@@ -3,7 +3,11 @@
 As a developer you have been tasked with creating a catalog service that exposes a REST API to 
 read from the product catalog database.
 
+<<<<<<< HEAD
 The catalog service is part of the a microservices architectured application called CoolStore. 
+=======
+The catalog service is part of the a microservice architectured application called **CoolStore**.
+>>>>>>> e05c74a8e0390b70f6f01e6e945dc7331069847c
 
 ![CoolStore Microservices]({% image_path create-catalog-coolstore.png %}){:width="900px"}
 
@@ -16,10 +20,10 @@ After the initial sprint planing the team has decided to use Spring Boot, Spring
 The first step is to create a java class that represents the product data domain model with the following 
 fields:
 
-* **ItemId** - a string representing a unique id for the product
-* **name** - a string between 1-255 characters that contains the name of the product
-* **description** - a string between 0-2500 characters that contains the a details description about the product.
-* **price** - a double value that represent the list price of a product.
+* **`ItemId`** - a string representing a unique id for the product
+* **`name`** - a string between 1-255 characters that contains the name of the product
+* **`description`** - a string between 0-2500 characters that contains the a details description about the product.
+* **`price`** - a double value that represent the list price of a product.
 
 The database table would look like this:
 
@@ -280,14 +284,12 @@ Select all the changed or new files and check the box next to **Push committed c
 
 ![Git Commit]({% image_path create-catalog-commit-2.png %}){:width="600px"}
 
-Go to OpenShift Web Console and the **Catalog DEV** project, then **Builds** > **Pipelines** to watch the 
-pipeline build and deploy the Catalog code:
-`{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
+Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"} and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the Catalog code:
+({{OPENSHIFT_MASTER_URL}}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"}
 
 ![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
 
-When the pipeline is completed, point your browser to the Catalog url deployed on OpenShift to access it:
-`http://catalog-dev.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}
+When the pipeline is completed, point your browser to the [Catalog url deployed on OpenShift](http://catalog-dev{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"} to access it.
 
 Note that you can find the Catalog url also in the project overview in the OpenShift Web Console.
 
@@ -298,4 +300,4 @@ Note that you can find the Catalog url also in the project overview in the OpenS
 
 ### Summary
 
-Congratulations, you have managed to create the first version of our microservices. Pad yourself on the back and reflect a bit on how easy it was to do this using this integrated development environment and how easy it was to deploy it to OpenShift. In the next module we will look at how to do a service-to-service call.
+Congratulations, you have managed to create the first version of our microservices. Pat yourself on the back and reflect a bit on how easy it was to do this using this integrated development environment and how easy it was to deploy it to OpenShift. In the next module we will look at how to do a service-to-service call.

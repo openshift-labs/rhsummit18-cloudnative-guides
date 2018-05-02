@@ -27,7 +27,7 @@ catalog-postgresql-1-c4rsm   1/1       Running   0          41m
 ~~~
 
 Our Spring Boot Catalog application configuration is provided via a properties filed called `application-default.properties`
-and can be overriden and [overlayed via multiple mechanisms](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html).
+and can be overriden and [overlayed via multiple mechanisms](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html){:target="_blank"}.
 
 In this scenario, you will configure the Catalog service which is based on Spring Boot to override the default
 H2 database configuration using alternative configuration values backed by an [OpenShift ConfigMap]({{ OPENSHIFT_DOCS_BASE }}/dev_guide/configmaps.html){:target="_blank"}.
@@ -72,7 +72,7 @@ a file called `application.properties` which the content the follows it after `-
 
 ### Use ConfigMap with Spring Boot
 
-Let's modify our application to use it. We will use the [Spring Cloud Kubernetes](https://github.com/fabric8io/spring-cloud-kubernetes#configmap-propertysource)
+Let's modify our application to use it. We will use the [Spring Cloud Kubernetes](https://github.com/fabric8io/spring-cloud-kubernetes#configmap-propertysource){:target="_blank"}
 project. Using this dependency, Spring Boot will search for a ConfigMap (by default with the same name as
 the application) to use as the source of application configuration during application bootstrapping and
 if enabled, triggers hot reloading of beans or Spring context when changes are detected on the ConfigMap.
@@ -94,8 +94,8 @@ Since you do want Spring Boot to discover the ConfigMaps inside the **dev** proj
 need to grant permission to the Spring Boot service account to access the OpenShift REST API and find the
 ConfigMaps. To grant this permission, run the following in Eclipse Che **Terminal**:
 
-~~~shell
-oc policy add-role-to-user view -n dev -z default
+~~~bash
+oc policy add-role-to-user view -n dev{{PROJECT_SUFFIX}} -z default
 ~~~
 
 Let's re-run our tests just to make sure our new additions don't cause breakage:
@@ -141,10 +141,7 @@ Commit the `pom.xml` changes to code repository:
 
 This will trigger the pipeline build.
 
-Open the OpenShift Web Console and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the updated catalog code:
-`{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
+Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}){:target="_blank"} and click on **Builds** > **Pipelines** to watch the pipeline build and deploy the updated catalog code:
 
 ![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
 

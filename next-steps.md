@@ -1,3 +1,0 @@
-#### Next Steps...
-
-Minishift, learn.openshift.com, etc

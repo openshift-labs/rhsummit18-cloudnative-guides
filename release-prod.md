@@ -8,7 +8,7 @@ oc env -n prod dc/inventory SERVICE_DELAY=400 --overwrite=true && oc rollout sta
 
 |**NOTE:** This command will introduce a delay in our inventory service so that each call will take > 400ms
 
-Our first release are now in production, but shortly after the release we are getting alarms that calls to **/services/products** is takeing over 2 secs to respond to. Our first task will be to investigate why that is. First let's see if we can see the issue if we open a browser to `http://web-ui-prod.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}. The application takes quite a bit of time to respond with a product list. Let's verify that this is because of the catalog service by timing a couple of calls to the catalog service like this:
+Our first release are now in production, but shortly after the release we are getting alarms that calls to `/services/products` is takeing over 2 secs to respond to. Our first task will be to investigate why that is. First let's see if we can see the issue if we open a browser to `http://web-ui-prod.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}. The application takes quite a bit of time to respond with a product list. Let's verify that this is because of the catalog service by timing a couple of calls to the catalog service like this:
 
 ~~~shell
 curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products

@@ -1,159 +1,109 @@
 ## Create a Catalog Service
 
-As a developer you have been tasked with creating a catalog service that exposes a HTTP API to read from the product catalog database.
+As a developer you have been tasked with creating a catalog service that exposes a REST API to 
+read from the product catalog database.
 
-The catalog service is part of the a microservice architectured application called Coolstore. 
+The catalog service is part of the a microservices architectured application called CoolStore. 
 
 ![CoolStore Microservices]({% image_path create-catalog-coolstore.png %}){:width="900px"}
-
-TODO: Add picture of Catalog application.
 
 After talking to the **web** team you have decided to create two endpoints. One that returns a list of all products as a JSON string and another one that based on product Id returns a single product.
 
 After the initial sprint planing the team has decided to use Spring Boot, Spring Data and PostgreSQL to implement this. However, since the team wants to be able to test and run this locally without having to install a database the you will also use H2 (an in-memory database) for local development.
 
-### Creating the database model
+### Create the Domain Object Model
 
-Your first task is to create a database model that will represent the product data. :
+The first step is to create a java class that represents the product data domain model with the following 
+fields:
 
 * **ItemId** - a string representing a unique id for the product
 * **name** - a string between 1-255 characters that contains the name of the product
 * **description** - a string between 0-2500 characters that contains the a details description about the product.
 * **price** - a double value that represent the list price of a product.
 
-Based on that you decide to create a database table called `CATALOG` that looks like this:
+The database table would look like this:
 
 | ITEMID |    NAME     |                                       DESCRIPTION                                       | PRICE |
 |--------|-------------|-----------------------------------------------------------------------------------------|-------|
 | 444435 | Oculus Rift | The world of gaming has also undergone some very unique and compelling tech advances... | 106.0 |
 
-To populate our database we will use a auto import feature of Spring that will pre-populate our database with content. We do that by creating a file called `schema.sql` under `src/main/resources`
 
-~~~sql
-DROP TABLE IF EXISTS CATALOG;
-
-CREATE TABLE CATALOG (
-  ITEMID VARCHAR(256) NOT NULL PRIMARY KEY,
-  NAME VARCHAR(256),
-  DESCRIPTION VARCHAR(2560),
-  PRICE DOUBLE PRECISION
-);
-~~~
-
-The UI team has also been friendly enough to provide you with some test data, that you also add to the `schema.sql` file
-
-~~~sql
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('329299', 'Red Fedora', 'Official Red Hat Fedora', 34.99);
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('329199', 'Forge Laptop Sticker', 'JBoss Community Forge Project Sticker', 8.50);
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('165613', 'Solid Performance Polo', 'Moisture-wicking, antimicrobial 100% polyester design wicks for life of garment. No-curl, rib-knit collar; special collar band maintains crisp fold; three-button placket with dyed-to-match buttons; hemmed sleeves; even bottom with side vents; Import. Embroidery. Red Pepper.',17.80);
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('165614', 'Ogio Caliber Polo', 'Moisture-wicking 100% polyester. Rib-knit collar and cuffs; Ogio jacquard tape inside neck; bar-tacked three-button placket with Ogio dyed-to-match buttons; side vents; tagless; Ogio badge on left sleeve. Import. Embroidery. Black.', 28.75);
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('165954', '16 oz. Vortex Tumbler', 'Double-wall insulated, BPA-free, acrylic cup. Push-on lid with thumb-slide closure; for hot and cold beverages. Holds 16 oz. Hand wash only. Imprint. Clear.', 6.00);
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('444434', 'Pebble Smart Watch', 'Smart glasses and smart watches are perhaps two of the most exciting developments in recent years.', 24.00);
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('444435', 'Oculus Rift', 'The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Geekstakes Oculus Rift GiveawayNintendo marketed its Virtual Boy gaming system in 1995.Lytro',106.00 );
-insert into CATALOG (ITEMID, NAME, DESCRIPTION, PRICE) values ('444436', 'Lytro Camera', 'Consumers who want to up their photography game are looking at newfangled cameras like the Lytro Field camera, designed to take photos with infinite focus, so you can decide later exactly where you want the focus of each image to be.', 44.30);
-~~~
-
-
-|**STEP BY STEP:** Creating the database model
-|![New file]({% image_path che-new-file.gif %}){:width="640px"}
-
-  
-### Create the Domain Object Model
-
-Next step is to create a java class that represents the product data domain model. So you create a class named `Product` and is located in `com.redhat.coolstore.model` like this:
+Create a Java class named `Product` in `src/main/java` and the `com.redhat.coolstore.model` package with the following code:
 
 ~~~java
 package com.redhat.coolstore.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Entity
 public class Product {
-    public String itemId;
-    public String name;
-    public String description;
-    public double price;
+    @Id
+    private String itemId;
+    private String name;
+    @Column(length = 2500)
+    private String description;
+    private double price;
 }
 ~~~
 
-|**NOTE:** We recommend to set these fields as private or protected and use getters and setters for encapsulation reasons, but to save time and code lines we declare these are public.
+`@Entity` annotation marks the class as a data model for Spring Data. You can generate the getter and 
+setter methods using Eclipse Che. Click on a spot where you want the 
+methods to be generated, write `get` or `set` and then press Ctrl+Space to get the list of proposals for 
+the code to be generated. Click on `getName()` for example to generate the `getName()` method. Repeat for 
+all the getters and setters.
 
 |**STEP BY STEP:** Creating the Domain Object Model
-|![Create a model]({% image_path che-create-model.gif %}){:width="640px"}
+|![Create a model]({% image_path che-create-model.gif %}){:width="900px"}
 
-### Create a repoistory to access data
+### Adding Seed Data
 
-To access data from the database we will implement a `ProductRepository` class using `JdbcTemplate` based on KISS principle. Keep It Simple Stupid ;-)
+To populate our database we will use a auto import feature of Spring that will pre-populate 
+our database with content. We do that by creating a file called `import.sql` under `src/main/resources` with the following content, 
+which is automatically imported when the application starts:
 
-Start by creating a class called `ProductRepository` in `src/main/java/com/redhat/coolstore/service`
+~~~sql
+insert into product (item_id, name, description, price) values ('329299', 'Red Fedora', 'Official Red Hat Fedora', 34.99);
+insert into product (item_id, name, description, price) values ('329199', 'Forge Laptop Sticker', 'JBoss Community Forge Project Sticker', 8.50);
+insert into product (item_id, name, description, price) values ('165613', 'Solid Performance Polo', 'Moisture-wicking, antimicrobial 100% polyester design wicks for life of garment. No-curl, rib-knit collar; special collar band maintains crisp fold; three-button placket with dyed-to-match buttons; hemmed sleeves; even bottom with side vents; Import. Embroidery. Red Pepper.',17.80);
+insert into product (item_id, name, description, price) values ('165614', 'Ogio Caliber Polo', 'Moisture-wicking 100% polyester. Rib-knit collar and cuffs; Ogio jacquard tape inside neck; bar-tacked three-button placket with Ogio dyed-to-match buttons; side vents; tagless; Ogio badge on left sleeve. Import. Embroidery. Black.', 28.75);
+insert into product (item_id, name, description, price) values ('165954', '16 oz. Vortex Tumbler', 'Double-wall insulated, BPA-free, acrylic cup. Push-on lid with thumb-slide closure; for hot and cold beverages. Holds 16 oz. Hand wash only. Imprint. Clear.', 6.00);
+insert into product (item_id, name, description, price) values ('444434', 'Pebble Smart Watch', 'Smart glasses and smart watches are perhaps two of the most exciting developments in recent years.', 24.00);
+insert into product (item_id, name, description, price) values ('444435', 'Oculus Rift', 'The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Geekstakes Oculus Rift GiveawayNintendo marketed its Virtual Boy gaming system in 1995.Lytro',106.00 );
+insert into product (item_id, name, description, price) values ('444436', 'Lytro Camera', 'Consumers who want to up their photography game are looking at newfangled cameras like the Lytro Field camera, designed to take photos with infinite focus, so you can decide later exactly where you want the focus of each image to be.', 44.30);
+~~~
+
+### Create a Repository to Access Data
+
+You can use Spring Data repository abstraction which is a convenient way to access data 
+models in Spring applications without writing much code.
+
+Create a repository interface called `ProductRepository` in 
+`src/main/java/com/redhat/coolstore/service` with the following code:
 
 ~~~java
 package com.redhat.coolstore.service;
 
-public class ProductRepository {
+import com.redhat.coolstore.model.Product;
+import org.springframework.data.repository.CrudRepository;
 
+public interface ProductRepository extends CrudRepository<Product, String> {
 }
 ~~~
 
-First we need to annotate the class with `@Repository`. In Domain Driven Design (DDD) a *Repository* is defined as *"a mechanism for encapsulating storage, retrieval, and search behavior which emulates a collection of objects"*
+And that's it! You might be wondering why this interface does not have an implementation. `CrudRepository` is a 
+marker interface from Spring Data which tells Spring Data to generate the common finder methods (e.g. `findAll`) for your 
+repository and domain mode and make it available at runtime.
 
-~~~java
-@Repository
-~~~
-
-You will get an error notice near the annotation which tells you the annotation should be imported in order to be used in 
-your Java class. Fortunately Eclipse Che can fix that for you automatically. Right-click on the annotation (or the error) and 
-then choose **Quick Fix**. Eclipse Che will show you a list of quick fixes, click on **Import 'Repository'...** to import it to your 
-Java class.
-
-|![Quick Fix]({% image_path create-catalog-quick-fix.png %}){:width="400px"}
-
-|![Import Annotation]({% image_path create-catalog-import-class.png %}){:width="600px"}
-
-
-Next, we will inject a `JdbcTemplate` which is required to run queries:
-
-~~~java
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-~~~
-
-We also need a `RowMapper` that will help us transform the result of the query to a java Object, in our case we will use the `Product` class that we create in the previous section. The `RowMapper` declaration looks like this:
-
-~~~java
-    private RowMapper<Product> rowMapper = (rs, rowNum) -> {
-                Product p = new Product();
-                p.itemId = rs.getString("ITEMID");
-                p.name = rs.getString("NAME");
-                p.description = rs.getString("DESCRIPTION");
-                p.price = rs.getDouble("PRICE");
-                return p;
-            };
-~~~
-
-Now, we are ready to create the methods that returns `Product` object(s). We will start with a simple findById that will return a single `Product` object. For this we will use the `JdbcTemplate` and pass a SQL query and the rowMapper, like this:
-
-~~~java
-    public Product findById(String id) {
-        return jdbcTemplate.queryForObject("SELECT * FROM CATALOG WHERE ITEMID = '" + id + "'", rowMapper);
-    }
-~~~
-
-We also need a method to return all `Products` like that looks like this:
-
-~~~java
-    public List<Product> readAll() {
-        return jdbcTemplate.query("SELECT * FROM CATALOG", rowMapper);
-    }
-~~~
-
-|**STEP BY STEP:** Creating a repository for accessing data
-|![Create a repository]({% image_path create-catalog-step-by-step-repository.gif %}){:width="640px"}
-
-Congratulations! You have now created a domain model and a repository for our Catalog Service.
+You have now created a domain model and a repository for our Catalog Service.
 
 ### Test the Product Repository
 
-After creating domain model and a repository for our Catalog Service you realize that it would probably be smart to also write some test code that can verify that our implementation works as expected.
+After creating domain model and a repository for our Catalog Service you realize that it would probably be smart to also write some test code that can verify that the implementation works as expected.
 
-For that you will create a unit test called `ProductRepositoryTest` in `src/test/java` catalog that looks like this
+Create a unit test called `ProductRepositoryTest` under `src/test/java` folder and in the `com.redhat.coolstore.service` 
+package with the following code:
 
 ~~~java
 package com.redhat.coolstore.service;
@@ -163,61 +113,79 @@ public class ProductRepositoryTest {
 }
 ~~~
 
-Since this is a unit test with need to add annotation telling JUnit to run with `SpringRunner` and we also have to annotate the class with `SpringBootTest()` like this:
+Since this is a unit test that needs to run as a Spring test, add the following annotations to the 
+test class:
 
 ~~~java
 @RunWith(SpringRunner.class)
-@SpringBootTest()
+@SpringBootTest
 ~~~
 
-Since we are going to test the `ProductRepository` we need to inject one, like this:
+You will get an error notice near the annotation which tells you the annotation should be imported in order to be used in 
+your Java class. Fortunately Eclipse Che can fix that for you automatically. Right-click on the annotation (or the error) and 
+then choose **Quick Fix**. Eclipse Che will show you a list of quick fixes, click on **Import 'Repository'...** to import it to your 
+Java class. 
+
+The above annotations set up the correct Spring context and make required objects available for injection 
+and use in the unit tests.
+
+Inject an instance of `ProductRepository` which is the class under test:
 
 ~~~java
     @Autowired
     ProductRepository repository;
 ~~~
 
-Now, we are ready to write our first test. First we will test the `findById` method by collecting one of the product that we have defined in schema.sql and verify that the date are correct:
+Now you are ready to write the first test. First you can test the `findById` method by collecting one of 
+the product that you defined in `schema.sql` and verify that the data is correct:
 
 ~~~java
     @Test
-    public void test_readOne() {
-        Product product = repository.findById("444434");
+    public void test_findOne() {
+        Product product = repository.findOne("444434");
         assertThat(product).isNotNull();
-        assertThat(product.name).as("Verify product name").isEqualTo("Pebble Smart Watch");
-        assertThat(product.price).as("Price should match ").isEqualTo(24.0);
+        assertThat(product.getName()).as("Verify product name").isEqualTo("Pebble Smart Watch");
+        assertThat(product.getPrice()).as("Price should match ").isEqualTo(24.0);
     }
 ~~~
 
-We also need to test `readAll` method of the `ProductRepository`:
+Add another test for the `findAll` method:
 
 ~~~java
     @Test
-    public void test_readAll() {
-        List<Product> productList = repository.readAll();
-        assertThat(productList).isNotNull();
-        assertThat(productList).isNotEmpty();
-        List<String> names = productList.stream().map(p -> p.name).collect(Collectors.toList());
+    public void test_findAll() {
+        Iterable<Product> products = repository.findAll();
+        assertThat(products).isNotNull();
+        assertThat(products).isNotEmpty();
+        List<String> names = StreamSupport.stream(products.spliterator(), false).map(p -> p.getName()).collect(Collectors.toList());
         assertThat(names).contains("Red Fedora","Forge Laptop Sticker","Oculus Rift","Solid Performance Polo","16 oz. Vortex Tumbler","Pebble Smart Watch","Lytro Camera");
     }
 ~~~
 
-At this point you should have a lot of errors because we are not importing any classes and you can use the **Assistant > Organize Imports** to solve that. However, Organize import will not solve static imports to methods so we will manually import the `assertThat` method like this:
+At this point you should have a lot of errors because you might not have imported any classes.  Click on 
+**Assistant > Organize Imports** in the top bar menu. Organize import will however not import static methods 
+so add the static import for `assertThat` method like this to the top of the test class near the other imports:
 
 ~~~java
 import static org.assertj.core.api.Assertions.assertThat;
 ~~~
 
-Now, go ahead and run the unit test by right-clicking on the class and select **Run Test > Run JUnit Test**. Check that the test are passing either from the out put or by  and make sure that the unit tests are passing.
+Build the project to make sure everything is in order by click on **Run** > **Commands Palette** > **Build**.
+
+Now, go ahead and run the unit test by right-clicking on the the `ProductRepositoryTest` class file 
+in the project explorer and then select **Run Test > Run JUnit Test**. Check that the test are passing 
+either from the out put or by  and make sure that the unit tests are passing.
 
 |**STEP BY STEP:** Create a Unit test for the Repository
 |![Create a repository]({% image_path create-service-step-by-step-run-test.gif %}){:width="640px"}
 
 ### Creating a Product Endpoint
 
-Since we now have confirmed that we can successfully get products from a database we are now ready to create our endpoint.
+Since it's now verified that products can successfully fetched from the database, you are ready to create a REST endpoint 
+that returns the products data as a JSON response..
 
-1. Create a class called **ProductEndpoint** under **src/main/java/com/redhat/coolstore/service**.
+Create a class called `ProductEndpoint` in `src/main/java/com/redhat/coolstore/service` with 
+the following code:
 
 ~~~java
 package com.redhat.coolstore.service;
@@ -227,94 +195,82 @@ public class ProductEndpoint {
 }
 ~~~
 
-1. Annotate the class with `@Controller` to tell Spring that this is a controller bean. Also annotate it with `@RequestMapping` specifying that this controller will be handling request to /service/* like this:
+Annotate the class with `@Controller` to tell Spring that this is a controller bean. Also annotate it 
+with `@RequestMapping` specifying that this controller will be handling request to `/service/*` like this:
 
 ~~~java
 @Controller
 @RequestMapping("/services")
 ~~~
 
-To access the `ProductRepository` we need to auto inject it as a field like this:
+To access the `ProductRepository` you also need to auto inject it as a field like this:
 
 ~~~java
     @Autowired
     private ProductRepository productRepository;
 ~~~
 
-Then we need to expose the endpoint that list all products via the `/services/products` URI for GET calls like this:
+Then you need to expose the endpoint that list all products via the `/services/products` URI for GET calls like this:
 
 ~~~java
     @ResponseBody
     @GetMapping("/products")
     public ResponseEntity<List<Product>> readAll() {
-        return new ResponseEntity<List<Product>>(productRepository.readAll(),HttpStatus.OK);
+        Spliterator<Product> iterator = productRepository.findAll().spliterator();
+        List<Product> products = StreamSupport.stream(iterator, false).collect(Collectors.toList());
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
 ~~~
 
-And finally we create the endpoint to find a particular product, by providing the `itemId` as part of the path like this:
+And finally create the endpoint to find a particular product, by providing the `itemId` as part of the path like this:
 
 ~~~java
     @ResponseBody
     @GetMapping("/product/{id}")
     public ResponseEntity<Product> readOne(@PathVariable("id") String id) {
-        return new ResponseEntity<Product>(productRepository.findById(id),HttpStatus.OK);
+        Product product = productRepository.findOne(id);
+        return new ResponseEntity<Product>(product,HttpStatus.OK);
     }
 ~~~
 
 |**STEP BY STEP:** Create a REST endpoint for Catalog service 
-|![Step by step - create product endpoint]({% image_path create-catalog-step-by-step-product-endpoint.gif %}){:width="640px"}
+|![Step by step - create product endpoint]({% image_path create-catalog-step-by-step-product-endpoint.gif %}){:width="900px"}
 
-### Testing the endpoint
+### Testing the Endpoint
 
-We are now ready to test the endpoint and for that we could implement a unit test, but we will save that for a bit later. Instead we are going to run the application, using the **Commands Palette** in Eclipse Che. Click on the **Commands Palette** and then on **RUN > run**
+We are now ready to test the endpoint and for that we could implement a unit test, 
+but we will save that for a bit later. Instead we are going to run the application, 
+using the **Commands Palette** in Eclipse Che. Click on the **Commands Palette** and then on **RUN > run**
 
-When the **run** output panel reports `Started CatalogServiceApplication` click on the link next to **Preview:** to open a preview browser to the application.
+When the **run** output panel reports `Started CatalogServiceApplication` click 
+on the link next to **Preview:** to open a preview browser to the application.
 
-Don't worry if you see a **Application Not Available** page. Just reload the page using using F5 (or CTRL+R or CMD+R if on mac).
+Don't worry if you see a **Application Not Available** page. Just reload the 
+page using using F5 (or CTRL+R or CMD+R if on mac).
 
 ![Application Not Available]({% image_path create-catalog-application-not-available.png %}){:width="600px"}
 
 You should now see a page that list the content of the product catalog like this:
 
-![Application Preview]({% image_path create-catalog-success.png %}){:width="700px"}
+![Application Preview]({% image_path create-catalog-success.png %}){:width="900px"}
 
-|**NOTE:** This command will run `mvn spring-boot:run`, but is similar to running `java -jar target/<app>.jar` directly from a terminal window.
+|**NOTE:** This command will run `mvn spring-boot:run`, but is similar to 
+running `java -jar target/<app>.jar` directly from a terminal window.
 
 |**NOTE:** The Preview URL is unique and will be different from the screenshot above
 
 |**STEP BY STEP:** Run the application locally 
 |![Step by step - run locally]({% image_path create-catalog-step-by-step-run.gif %}){:width="640px"}
 
-|**INFO:** Even if you application is actually running in Eclipse Che on OpenShift we are actually not running a proper OpenShift managed application yet. This development flow is similar as if you where developing locally on you developer machine and testing locally before deploying to "real" server. This is a great way for you as a developer to test your own code changes before committing and pushing it to a shared repository.
+|**INFO:** Even if you application is actually running in Eclipse Che on OpenShift 
+we are actually not running a proper OpenShift managed application yet. This development 
+flow is similar as if you where developing locally on you developer machine and testing 
+locally before deploying to "real" server. This is a great way for you as a developer 
+to test your own code changes before committing and pushing it to a shared repository.
 
 |**NOTE:** The current version of the application does not provide a inventory quantity number. We will look at that in the next section.
 
-### Adding CORS Headers
-Since our web-ui is hosted on a different route we will have to enable Cross-Origin Resource Service (CORS) for our application. This is a rather and we can enable it globally for our catalog service by adding an anonymous inner-class in `CatalogServiceApplication` that implements a `javax.servlet.Filter` interface like this: 
-
-~~~java
-    @Controller
-    class SimpleCORSFilter implements Filter {
-        public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-            HttpServletResponse response = (HttpServletResponse) res;
-            response.setHeader("Access-Control-Allow-Origin", "*");
-            response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
-            response.setHeader("Access-Control-Max-Age", "3600");
-            chain.doFilter(req, res);
-        }
-        public void init(FilterConfig filterConfig) {
-        }
-        public void destroy() {
-        }
-    }
-~~~
-
-|**STEP BY STEP:** Commit the changes and run the pipeline
-|![Step by step - Commit the changes and run the pipeline]({% image_path create-catalog-step-by-step-pipeline.gif %}){:width="640px"}
-
-|**NOTE:** The current version of the application does not make use of the PostgreSQL server. Instead it currently uses the H2 database. We will come back to that when we look at module `Externalize Configuration`
-
-### Commit and push the first version of the application
+### Push the Changes to Git Repository
 
 Commit all the changes and push all the changes by selecting **Git > Commit** from the menu.
 
@@ -324,7 +280,8 @@ Select all the changed or new files and check the box next to **Push committed c
 
 ![Git Commit]({% image_path create-catalog-commit-2.png %}){:width="600px"}
 
-Open the OpenShift and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the Catalog code:
+Go to OpenShift Web Console and the **Catalog DEV** project, then **Builds** > **Pipelines** to watch the 
+pipeline build and deploy the Catalog code:
 `{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
 
 ![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
@@ -334,25 +291,10 @@ When the pipeline is completed, point your browser to the Catalog url deployed o
 
 Note that you can find the Catalog url also in the project overview in the OpenShift Web Console.
 
-### Test the application using the Web-UI
+|**STEP BY STEP:** Commit the changes and run the pipeline
+|![Step by step - Commit the changes and run the pipeline]({% image_path create-catalog-step-by-step-pipeline.gif %}){:width="640px"}
 
-So far we have only been testing the catalog service alone, but wouldn't it be nice if we could actually see what the end-user will see as well. Let's go a head and deploy a WEB UI service to our **Catalog DEV** project by using a template that the Web-UI team has prepared for us.
-
-Run the following command in the terminal window:
-
-~~~shell
-oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/web-template.yml -n dev
-~~~
-
-To verify that the **web-ui** application is up we can either go to the console and check or run the following command:
-
-~~~shell
-oc rollout status dc  web-ui
-~~~
-
-When the rollout command reports `replication controller "web-ui-1" successfully rolled out` we are ready to test it.
-
-Paste the following URL (replacing the GUID) in a new browser window/tab `http://web-ui-dev.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}
+|**NOTE:** The current version of the application does not make use of the PostgreSQL server. Instead it currently uses the H2 database. We will come back to that when we look at module `Externalize Configuration`
 
 ### Summary
 

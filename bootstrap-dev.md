@@ -114,14 +114,14 @@ oc new-build redhat-openjdk18-openshift:1.2~http://{{GIT_HOSTNAME}}/{{GIT_USERNA
     -e MAVEN_MIRROR_URL=http://nexus.lab-infra.svc:8081/repository/maven-all-public
 ~~~
 
-The `base-image#source-repo` expression in the above command instructs OpenShift to pull the 
-application source code from the specified source code repository, build it using the build tool that 
+The `[BASE IMAGE]~[SOURCE REPO]` expression in the above command instructs OpenShift to pull the
+application source code from the specified source code repository `[SOURCE_REPO]`, build it using the build tool that
 is suitable for the application (nothing says Maven louder than a `pom.xml`!), and then build the container 
-image for the application by layering the application binaries on the `base-image`. Since Catalog service 
+image for the application by layering the application binaries on the `[BASE IMAGE]`. Since Catalog service
 is based on Spring Boot, we use the certified OpenJDK image that is available in OpenShift 
-aka `redhat-openjdk18-openshift:1.2`.
+a.k.a. `redhat-openjdk18-openshift:1.2`.
 
-Go to **Builds** > **Builds** to see the Catalog image build running. You can also see the build logs by 
+In the [`dev` project console]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"}, Go to **Builds** > **Builds** to see the Catalog image build running. You can also see the build logs by
 clicking on the build.
 
 ![Catalog Build]({% image_path bootstrap-catalog-build.png %}){:width="900px"}
@@ -144,7 +144,7 @@ oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudn
 
 ![Deploy Catalog]({% image_path bootstrap-deploy-catalog.png %}){:width="900px"}
 
-Click on **Overview** in the left sidebar menu to see the development project overview. You 
+Back in the [`dev` project console]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"}, click on **Overview** in the left sidebar menu to see the development project overview. You
 can see that the Catalog pod and a PostgreSQL database pod which were declared in the template 
 that you deployed are up and ready.
 

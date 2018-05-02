@@ -11,9 +11,9 @@ modules:
   config-management:
     name: Externalise Configuration
   bootstrap-prod:
-    name: Automate PROD Release
-  release-prod:
-    name: Distributed tracing
+    name: Automate Production Releases
+  tracing:
+    name: Distributed Tracing
   fault-tolerance:
     name: Fault Tolerance and Resilience
   env-info:

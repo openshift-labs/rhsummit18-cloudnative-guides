@@ -29,6 +29,6 @@ modules:
   - config-management
   - service-to-service
   - bootstrap-prod
-  - release-prod
+  - tracing
   - fault-tolerance
   - env-info

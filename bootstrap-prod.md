@@ -242,7 +242,7 @@ the **catalog-release** pipeline.
 ![Catalog Release Pipeline]({% image_path boostrap-prod-release-pipeline.png %}){:width="900px"}
 
 After the release pipeline is completed successfully (all green, yaay!),
-[go the git repository in your browser](http://{{GIT_HOSTNAME}}/{{GIT_PASSWORD}}/catalog/releases){:target="_blank"} to
+[go the git repository in your browser](http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog/releases){:target="_blank"} to
 review the Catalog release that is created in the Git repository.
 
 ![Catalog Git Releases]({% image_path boostrap-prod-git-releases.png %}){:width="900px"}

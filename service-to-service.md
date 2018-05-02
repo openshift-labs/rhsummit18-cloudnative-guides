@@ -285,6 +285,7 @@ Next, we will inject the `TestRestTemplate` as a class member variable like this
 We also need some test data that Hoverfly can return. These can be declared as static member variables like this:
 
 ~~~java
+{% raw  %}
     private static Inventory mockFedoraInventory, mockStickersInventory, mockDefaultInventory;
 
     static {
@@ -300,6 +301,7 @@ We also need some test data that Hoverfly can return. These can be declared as s
         mockDefaultInventory.quantity = 0;
         mockDefaultInventory.itemId = "{{ Request.Path.[3] }}";
     }
+{% endraw %}
 ~~~
 
 Next, we define the Hoverfly rule like this:

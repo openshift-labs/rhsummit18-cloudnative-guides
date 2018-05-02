@@ -34,7 +34,7 @@ features to gracefully handle the high load.
 
 ### Introduce bad behavior
 
-In the **Coolstore PROD** project, let's scale up the `inventory` service to 2 pods:
+In the **CoolStore PROD** project, let's scale up the `inventory` service to 2 pods:
 
 ~~~sh
 oc scale dc/inventory --replicas=2

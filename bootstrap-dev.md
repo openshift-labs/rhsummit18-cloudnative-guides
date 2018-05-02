@@ -75,7 +75,7 @@ click on **Run** > **Commands Palette** > **Build** (there are more ways to do t
 
 You will use OpenShift CLI and OpenShift Web Console for interacting with OpenShift during these labs. OpenShift 
 Web Console is accessible at: <br/>
-{{ OPENSHIFT_MASTER_URL }}
+`{{ OPENSHIFT_MASTER_URL }}`{: style="color: blue"}
 
 You can use the Eclipse Che **Terminal** panel to run OpenShift CLI commands that is what you will 
 use in the following labs whenever it's instructed to run an OpenShift CLI command.
@@ -88,7 +88,7 @@ Use the OpenShift CLI to login into OpenShift with the following credentials:
 |**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~shell
-oc login {{ OPENSHIFT_MASTER_URL }} -u {{ OPENSHIFT_USERNAME }} -p {{ OPENSHIFT_PASSWORD }}
+oc login {{ OPENSHIFT_MASTER_URL }}
 ~~~
 
 ![OpenShift CLI Login]({% image_path bootstrap-ocp-login.png %}){:width="900px"}
@@ -125,6 +125,8 @@ aka `redhat-openjdk18-openshift:1.2`.
 Go to **Builds** > **Builds** to see the Catalog image build running. You can also see the build logs by 
 clicking on the build.
 
+![Catalog Build]({% image_path bootstrap-catalog-build.png %}){:width="900px"}
+
 [OpenShift Templates]({{OPENSHIFT_DOCS_BASE}}/dev_guide/templates.html) allow composing applications 
 from multiple containers and deploy them at once. The Catalog service needs a PostgreSQL database and 
 therefore you can use a template that is already created to deploy the Catalog skeleton project and 
@@ -140,6 +142,22 @@ Run the following in Eclipse Che **Terminal**:
 ~~~shell
 oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/catalog-template.yml 
 ~~~
+
+![Deploy Catalog]({% image_path bootstrap-deploy-catalog.png %}){:width="900px"}
+
+Click on **Overview** in the left sidebar menu to see the development project overview. You 
+can see that the Catalog pod and a PostgreSQL database pod which were declared in the template 
+that you deployed are up and ready.
+
+![Catalog Service]({% image_path bootstrap-catalog-overview.png %}){:width="900px"}
+
+The Catalog service currently doesn't have much code in it except an example endpoint. Try 
+the endpoint in your browser to make sure it is deployed correctly: <br/>
+`http://catalog-dev{{ PROJECT_SUFFIX }}.{{ APPS_HOSTNAME_SUFFIX }}/hello`{: style="color: blue"}
+
+If you see a `Hello, World!` response back in your browser, then it's working.
+
+In the next labs, you will write some code to build a few REST endpoints in the Catalog service.
 
 #### Continuous Integration Pipeline
 
@@ -234,6 +252,8 @@ comes with OpenShift.
 oc new-app jenkins-persistent
 ~~~
 
+![Deploy Jenkins]({% image_path bootstrap-jenkins-deploy.png %}){:width="900px"}
+
 Since the pipeline will control the build and deployment flow, you should disable 
 [the automatic deployment triggers]({{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers) 
 that OpenShift uses to automate the deployment process:
@@ -270,6 +290,9 @@ spec:
       type: Generic
 ~~~
 
+
+![Import YAML/JSON - Create Pipeline]({% image_path bootstrap-create-pipeline.png %}){:width="700px"}
+
 Click on **Create**. Try the pipeline!
 
 #### Build and Test on Every Code Change
@@ -278,7 +301,8 @@ Manually triggering the deployment pipeline to run is useful but the real goal i
 to build and test the catalog service on every change in code or configuration and deploy it into 
 the development environment.
 
-In order to automate triggering the pipeline, you can define a webhook on your Git repository to 
+In order to automate triggering the pipeline, you can define a 
+[webhook](https://developer.github.com/webhooks/){:target="_blank"} on your Git repository to 
 notify OpenShift on every commit that is made to the Git repository and trigger a pipeline execution.
 
 In the OpenShift Web Console go to **Builds** > **Pipelines** and then click on the `catalog-build` pipeline. 
@@ -302,9 +326,13 @@ Click on the `catalog` repository and then on **Settings**
 Click on **Webhooks** and then on **Add Webhook** > **Gogs**. Paste the pipeline generic webhook url 
 you copied into the **Payload URL** textbox and then click on **Add Webhook**.
 
+![Add Webhook]({% image_path bootstrap-webhook.png %}){:width="600px"}
+
 The webhook is added now and will trigger the pipeline to run on every push to the `catalog` git 
 repository.
 
 You can test the webhook by clicking on the webhook and then on **Test Delivery** button.
 
-Well done! You are now ready to proceed to the next lab.
+![Webhook Test Delivery]({% image_path bootstrap-webhook-testdelivery.png %}){:width="600px"}
+
+Well done! You are now ready to proceed to the next lab and start writing some code.

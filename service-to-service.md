@@ -9,10 +9,8 @@ The UI team has asked us to include inventory information in the responses when 
 By calling the inventory service in production like this:
 
 ~~~shell
-curl http://inventory-prod.{{APPS_HOSTNAME_SUFFIX}}/services/inventory/444434
+curl http://inventory-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/inventory/444434
 ~~~
-
-|**CAUTION:** Replace GUID with the guid provided to you
 
 We can see that the response from the curl command looks like this:
 
@@ -72,7 +70,7 @@ First, we need to add a couple of dependencies. Add the following the `pom.xml` 
 
 |**NOTE:** After changing the `pom.xml` it's recommended that you build the project so that new dependencies are downloaded
 
-Now we are ready to create a client. Using Feign all we have to do to is to declare a interface and annotate it with `@FeginClient`. We will create the interface in the `com.redhat.coolstore.client` package and call it `InventoryClient`
+Now we are ready to create a client. Using Feign all we have to do to is to declare a interface and annotate it with `@FeignClient`. We will create the interface in the `com.redhat.coolstore.client` package and call it `InventoryClient`
 
 ~~~java
 package com.redhat.coolstore.client;
@@ -96,7 +94,7 @@ Now all we have todo is tell Feign some meta data about the request to the inven
     Inventory getInventoryStatus(@PathVariable("itemId") String itemId);
 ~~~
 
-Finally, we also have to tell Spring to look for the `@FeginClient` annotation and automatically create an implementation for it. This is done by adding the `@EnableFeignClients` annotation to **src/main/java/com/redhat/coolstore/CatalogServiceApplication.java**
+Finally, we also have to tell Spring to look for the `@FeignClient` annotation and automatically create an implementation for it. This is done by adding the `@EnableFeignClients` annotation to **src/main/java/com/redhat/coolstore/CatalogServiceApplication.java**
 
 |**STEP BY STEP:** Creating the client
 |![New file]({% image_path service-to-service-client.gif %}){:width="640px"}
@@ -120,9 +118,9 @@ Before we put the client in use, let's create a unit test for it. However, to te
     </dependency>
 ~~~
 
-|**NOTE:** After changing the `pom.xml` it's recommended that you build the project so that new dependencies are downloaded
+|**NOTE:** After changing the `pom.xml` it's recommended that you build the project again so that new dependencies are downloaded
 
-First, create a class under **/src/test/java/com/redhat/coolstore/client** called **InventoryClientTest** and annotate the class with `@RunWith(SpringRunner.class)` and `@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)`
+First, create a class under `/src/test/java/com/redhat/coolstore/client` called `InventoryClientTest` and annotate the class with `@RunWith(SpringRunner.class)` and `@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)`
 
 ~~~java
 package com.redhat.coolstore.client;
@@ -164,7 +162,7 @@ After that, create a `@ClassRule` that starts the Hoverfly simulator:
                     .willReturn(success(json(mockInventory)))));
 ~~~
 
-Finally, create the test it self
+Finally, create the test itself
 
 ~~~
     @Test
@@ -198,7 +196,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.redhat.coolstore.model.Inventory;
 ~~~
 
-Take a while and study the test class and notice that we inject a inventory client and then use that in the test to verify that we get a correct response. But how can we test a remote call in a unit test without actually having a service to call? That is where [Hoverfly](http://hoverfly.io) comes into play. Hoverfly can simulate API services by registering as a proxy to any outgoing traffic. In the `@ClassRule` we can defines how Hoverfly should respond to different calls.
+Take a while and study the test class and notice that we inject a inventory client and then use that in the test to verify that we get a correct response. But how can we test a remote call in a unit test without actually having a service to call? That is where [Hoverfly](http://hoverfly.io){:target="_blank"} comes into play. Hoverfly can simulate API services by registering as a proxy to any outgoing traffic. In the `@ClassRule` we can defines how Hoverfly should respond to different calls.
 
 So how does the Feign client know which URL to call? We will discuss the mechanics of service discovery later, but for now we can set a property called `ribbon.listOfServers`.
 
@@ -219,7 +217,7 @@ We are now finally ready to run the test. :-)
 
 Since we now have a working inventory client we are now ready to extend the Catalog endpoint use it so that we can provide additional input.
 
-Open the **src/main/java/com/redhat/coolstore/service/ProductEndpoint.java**
+Open `src/main/java/com/redhat/coolstore/service/ProductEndpoint.java`
 
 Add an injection of an `InventoryClient` like this:
 
@@ -475,15 +473,8 @@ Now, run the tests again and verify that even if we return a server error for in
 
 Before we deploy the a new version of the catalog service our application now depends on the inventory service available. We could use the product version of the inventory, but since that might affect performance of the production system. For that reason the inventory team has provided a mockup of the inventory service as a OpenShift template. The mock service behaves like the real service, but instead of actually calling the back-end system to retrieve the information, it returns a hard coded value of the inventory.
 
-Go to the openshift web console
-
-* OpenShift Web Console: `{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
-* Username: `{{OPENSHIFT_USERNAME}}`
-* Password: `{{OPENSHIFT_PASSWORD}}`
-
-Install the inventory-mockup into the "Catalog Dev" project. See Step by step instructions below
-
-|**CAUTION:** Replace GUID with the guid provided to you
+Go to the [OpenShift Web Console]({{ OPENSHIFT_MASTER_URL }}){:target="_blank"}, and
+install the inventory-mockup into the "Catalog Dev" project. See Step by step instructions below
 
 |**STEP BY STEP:** Create a mockup service
 |![New file]({% image_path service-to-service-mockup.gif %}){:width="640px"}

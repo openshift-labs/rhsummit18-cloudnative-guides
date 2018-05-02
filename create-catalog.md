@@ -2,11 +2,9 @@
 
 As a developer you have been tasked with creating a catalog service that exposes a HTTP API to read from the product catalog database.
 
-The catalog service is part of the a microservice architectured application called Coolstore. 
+The catalog service is part of the a microservice architectured application called **CoolStore**.
 
 ![CoolStore Microservices]({% image_path create-catalog-coolstore.png %}){:width="900px"}
-
-TODO: Add picture of Catalog application.
 
 After talking to the **web** team you have decided to create two endpoints. One that returns a list of all products as a JSON string and another one that based on product Id returns a single product.
 
@@ -16,10 +14,10 @@ After the initial sprint planing the team has decided to use Spring Boot, Spring
 
 Your first task is to create a database model that will represent the product data. :
 
-* **ItemId** - a string representing a unique id for the product
-* **name** - a string between 1-255 characters that contains the name of the product
-* **description** - a string between 0-2500 characters that contains the a details description about the product.
-* **price** - a double value that represent the list price of a product.
+* **`ItemId`** - a string representing a unique id for the product
+* **`name`** - a string between 1-255 characters that contains the name of the product
+* **`description`** - a string between 0-2500 characters that contains the a details description about the product.
+* **`price`** - a double value that represent the list price of a product.
 
 Based on that you decide to create a database table called `CATALOG` that looks like this:
 
@@ -324,36 +322,35 @@ Select all the changed or new files and check the box next to **Push committed c
 
 ![Git Commit]({% image_path create-catalog-commit-2.png %}){:width="600px"}
 
-Open the OpenShift and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the Catalog code:
-`{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
+Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"} and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the Catalog code!
 
 ![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
 
-When the pipeline is completed, point your browser to the Catalog url deployed on OpenShift to access it:
-`http://catalog-dev.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}
+When the pipeline is completed, point your browser to the [Catalog url deployed on OpenShift](http://catalog-dev{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"} to access it.
 
 Note that you can find the Catalog url also in the project overview in the OpenShift Web Console.
 
-### Test the application using the Web-UI
+### Test the application using the Web UI
 
 So far we have only been testing the catalog service alone, but wouldn't it be nice if we could actually see what the end-user will see as well. Let's go a head and deploy a WEB UI service to our **Catalog DEV** project by using a template that the Web-UI team has prepared for us.
 
 Run the following command in the terminal window:
 
 ~~~shell
-oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/web-template.yml -n dev
+oc new-app -f https://raw.githubusercontent.com/openshift-labs/rhsummit18-cloudnative-labs/master/openshift/web-template.yml -n dev{{PROJECT_SUFFIX}}
 ~~~
 
 To verify that the **web-ui** application is up we can either go to the console and check or run the following command:
 
 ~~~shell
-oc rollout status dc  web-ui
+oc rollout status dc web-ui
 ~~~
 
 When the rollout command reports `replication controller "web-ui-1" successfully rolled out` we are ready to test it.
 
-Paste the following URL (replacing the GUID) in a new browser window/tab `http://web-ui-dev.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}
+Open the [CoolStore web UI in your browser](http://web-ui-dev{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"} and browse the items! Notice
+none of them have inventory values. That's in the next step, so keep going!
 
 ### Summary
 
-Congratulations, you have managed to create the first version of our microservices. Pad yourself on the back and reflect a bit on how easy it was to do this using this integrated development environment and how easy it was to deploy it to OpenShift. In the next module we will look at how to do a service-to-service call.
+Congratulations, you have managed to create the first version of our microservices. Pat yourself on the back and reflect a bit on how easy it was to do this using this integrated development environment and how easy it was to deploy it to OpenShift. In the next module we will look at how to do a service-to-service call.

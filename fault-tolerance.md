@@ -56,10 +56,8 @@ inventory-2-p9c7h   2/2       Running   0          13s
 Now, let's make one of the pods misbehave (return `HTTP 503` errors when accessed). We'll use
 a special internal endpoint on the running pod to inject this fault.
 
-|**NOTE**: Replace the `[POD_NAME]` in the below `oc` command with the name of one of your pods!
-
 ~~~sh
-oc rsh -c inventory [POD_NAME] curl http://localhost:8080/misbehave
+oc rsh -c inventory $(oc get pods -l app=inventory -o name | head -1) curl http://localhost:8080/misbehave
 ~~~
 
 At this point, you'll have two `inventory` pods, only one of which works. We should see this when
@@ -70,8 +68,6 @@ we access the `inventory` service.
 At this point, due to the default load balancer, half of all access to the inventory service will go to the working
 pod and half to the broken pod. Let's access the `catalog` service directly (which in turn calls the `inventory` service). We
 will use the `siege` command line utility to repeatedly call the service. Half of the accesses should fail (thanks to the misbehaving pod):
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
 
 ~~~sh
 siege -c 1 -r 10 http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
@@ -187,8 +183,6 @@ EOF
 
 Repeat the test from above:
 
-|**CAUTION:** Replace `GUID` with the guid provided to you.
-
 ~~~sh
 siege -c 1 -r 10 http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
@@ -231,20 +225,11 @@ you'll not see any errors. If you wait out the pool ejection timeout period (15 
 it again, you'll again see a single failure followed by success. This is the circuit breaker in action!
 
 You can verify that the failing pod was indeed ejected by looking at the internal Istio proxy (Envoy)
-statistics for the `catalog` pod. First, get the pod name:
-
-~~~sh
-oc get pods -l app=catalog
-
-NAME                         READY     STATUS    RESTARTS   AGE
-catalog-2-p5q4d              2/2       Running   0          57m
-~~~
-
-Replace `[CATALOG_POD_NAME]` with your catalog's pod name in the below command:
+statistics for the `catalog` pod:
 
 ~~~sh
 
-oc rsh -c catalog [CATALOG_POD_NAME] curl localhost:15000/stats|grep outlier | sed 's/^.*outlier_detection.//g'
+oc rsh -c catalog $(oc get pods -l app=catalog -o name | head -1) curl localhost:15000/stats|grep outlier | sed 's/^.*outlier_detection.//g'
 
 ejections_active: 1
 ejections_consecutive_5xx: 14
@@ -306,8 +291,6 @@ EOF
 
 And repeat the test:
 
-|**CAUTION:** Replace `GUID` with the guid provided to you.
-
 ~~~sh
 siege -c 1 -r 10 http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
@@ -322,7 +305,7 @@ more resiliant in the face of overwhelming load and misbehaving infrastructure!
 You can verify the retry is happening by once again looking at the Envoy statistics:
 
 ~~~sh
-oc rsh -c catalog catalog-2-p5q4d curl localhost:15000/stats|grep inventory.prod|grep upstream_rq_retry
+oc rsh -c catalog $(oc get pods -l app=catalog -o name | head -1) curl localhost:15000/stats|grep inventory.prod|grep upstream_rq_retry
 
 cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry: 1
 cluster.out.inventory.prod.svc.cluster.local|http|version=v1.upstream_rq_retry_overflow: 0

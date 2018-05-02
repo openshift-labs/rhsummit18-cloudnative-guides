@@ -3,15 +3,17 @@
 Before we start this scenario you will have to issue the following command 
 
 ~~~shell
-oc env -n prod dc/inventory SERVICE_DELAY=400 --overwrite=true && oc rollout status dc/inventory 
+oc env -n prod{{PROJECT_SUFFIX}} dc/inventory SERVICE_DELAY=400 --overwrite && oc rollout status dc/inventory -n prod{{PROJECT_SUFFIX}}
 ~~~
 
 |**NOTE:** This command will introduce a delay in our inventory service so that each call will take > 400ms
 
-Our first release are now in production, but shortly after the release we are getting alarms that calls to **/services/products** is takeing over 2 secs to respond to. Our first task will be to investigate why that is. First let's see if we can see the issue if we open a browser to `http://web-ui-prod.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"}. The application takes quite a bit of time to respond with a product list. Let's verify that this is because of the catalog service by timing a couple of calls to the catalog service like this:
+Our first release are now in production, but shortly after the release we are getting alarms that calls to `/services/products` is takeing over 2 secs to respond to. Our first task will be to investigate why that is. First let's see if we can see the issue.
+
+Navigate to the [Web UI](http://web-ui-prod.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"}. The application takes quite a bit of time to respond with a product list. Let's verify that this is because of the catalog service by timing a couple of calls to the catalog service like this:
 
 ~~~shell
-curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
+curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
 The above command should print something like this:
@@ -22,7 +24,7 @@ status=200 size=2147 time=3.238312
 
 Where, the time attribute says how long in seconds it took to do the call.
 
-Since our product environment uses a distributed tracing tool called [Jaeger](https://www.jaegertracing.io). We can investigate further why our catalog service is taking so long to respond. Open a browser to `http://jaeger-query-istio-system.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"} and specify the following query:
+Since our product environment uses a distributed tracing tool called [Jaeger](https://www.jaegertracing.io){:target="_blank"}. We can investigate further why our catalog service is taking so long to respond. Open the [Jaeger Query Console](http://jaeger-query-istio-system.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"} and specify the following query:
 
 |Property|Value|
 |--------|--------|
@@ -42,12 +44,12 @@ The trace shows that our inventory service is pretty slow and take about 400ms t
 
 ### Finding a solution
 
-After discussing the issue with the inventory team, they confirmed that calls to **/service/inventory/{itemid}** is slow since it's not cached. They suggest that we instead call **/service/inventory/all** which returns a cached list of all products inventory status.
+After discussing the issue with the inventory team, they confirmed that calls to `/service/inventory/{itemid}` is slow since it's not cached. They suggest that we instead call **/service/inventory/all** which returns a cached list of all products inventory status.
 
 Let's investigate that API call.
 
 ~~~shell
-curl -w "\n" -s http://inventory-prod.{{APPS_HOSTNAME_SUFFIX}}/services/inventory/all
+curl -w "\n" -s http://inventory-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/inventory/all
 ~~~
 
 It should return something like this:
@@ -60,14 +62,14 @@ So, if we could rework the catalog application to retrieve the list of items in 
 
 ### Updating the Inventory Client
 
-First, open the **com.redhat.coolstore.client.InventoryClient** and add a method declaration like this:
+First, open the `com.redhat.coolstore.client.InventoryClient` and add a method declaration like this:
 
 ~~~java
     @RequestMapping(method = RequestMethod.GET, value = "/services/inventory/all", consumes = {MediaType.APPLICATION_JSON_VALUE})
     List<Inventory> getInventoryStatusForAll();
 ~~~
 
-Then, open the **com.redhat.coolstore.service.ProductEndpoint** and replace the **readAll()** method with the following implementation:
+Then, open the `com.redhat.coolstore.service.ProductEndpoint` and replace the `readAll()` method with the following implementation:
 
 ~~~java
     @ResponseBody
@@ -87,11 +89,11 @@ Then, open the **com.redhat.coolstore.service.ProductEndpoint** and replace the 
     }
 ~~~
 
-|**NOTE:** We are converting the `List` returned from the `InventoryClient` to a `Map` since that will make it much eacher to update the productList with the correct quantity.
+|**NOTE:** We are converting the `List` returned from the `InventoryClient` to a `Map` since that will make it much easier to update the productList with the correct quantity.
 
 ### Updating the unit test
 
-We also need to update the test case to support calls to **/services/inventory/all**
+We also need to update the test case to support calls to `/services/inventory/all`
 
 Start by adding a String with the return value we got from the curl request before like this:
 
@@ -106,7 +108,7 @@ Then add the following to the HoverFly ClassRule declaration:
       .willReturn(success(ALL_INVENTORY, "application/json"))
 ~~~
 
-We are now ready to run the tests and verify that our application passes the unit test, but clicking on the command pallette and choose test.
+We are now ready to run the tests and verify that our application passes the unit test, but clicking on the command palette and choose test.
 
 If it for some reason doesn't work, please go back an check the changes that you have done. Otherwise, go a head and commit and push your changes.
 
@@ -121,24 +123,24 @@ After that go a head and start the release pipeline.
 When the release pipeline is done execute the following command a couple of times.
 
 ~~~shell
-curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
+curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
 Check that the response time is now 400-500ms.
 
 |**NOTE:** The first call after the deployment may take a bit longer
 
-Also verify that the web application is now behaving better by opening `http://web-ui-prod.{{APPS_HOSTNAME_SUFFIX}}`{: style="color: blue"} in a browser.
+Also verify that the web application is now behaving better by [opening it in the browser](http://web-ui-prod.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"}.
 
 Before we move on please remove the service delay we added in the begining, by running the following command:
 
 ~~~shell
-oc env -n prod dc/inventory SERVICE_DELAY=0 --overwrite=true && oc rollout status dc/inventory
+oc env -n prod{{PROJECT_SUFFIX}} dc/inventory SERVICE_DELAY=0 --overwrite=true && oc rollout status dc/inventory -n prod{{PROJECT_SUFFIX}}
 ~~~
 
 ## Summary
 
-[Jaeger](https://www.jaegertracing.io), which is part of the developer preview of Istio for OpenShift is a great tool to see how calls are propagated between services. It does that by correlating trace id's that are passed as headers. Spring Boot and most of the other runtimes in RHOAR includes client libraries for OpenTracing, and together with Istio side-car proxies they make it possible to trace calls without changing the code of your application. After we have identified the problem updating the application was really easy, and because of our pipelines we could within minutes push the fix all the way to production.
+[Jaeger](https://www.jaegertracing.io){:target="_blank"}, which is part of the developer preview of Istio for OpenShift is a great tool to see how calls are propagated between services. It does that by correlating trace id's that are passed as headers. Spring Boot and most of the other runtimes in RHOAR includes client libraries for OpenTracing, and together with Istio side-car proxies they make it possible to trace calls without changing the code of your application. After we have identified the problem updating the application was really easy, and because of our pipelines we could within minutes push the fix all the way to production.
 
 
 

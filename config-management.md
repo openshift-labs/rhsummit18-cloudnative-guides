@@ -21,10 +21,10 @@ catalog-postgresql-1-c4rsm   1/1       Running   0          41m
 ~~~
 
 Our Spring Boot Catalog application configuration is provided via a properties filed called `application-default.properties`
-and can be overriden and [overlayed via multiple mechanisms](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html).
+and can be overriden and [overlayed via multiple mechanisms](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html){:target="_blank"}.
 
 In this scenario, you will configure the Catalog service which is based on Spring Boot to override the default
-H2 database configuration using alternative configuration values backed by an [OpenShift ConfigMap](https://docs.openshift.org/latest/dev_guide/configmaps.html).
+H2 database configuration using alternative configuration values backed by an [OpenShift ConfigMap](https://docs.openshift.org/latest/dev_guide/configmaps.html){:target="_blank"}.
 
 The ConfigMap has been created for you already, which supplies the necessary PostgreSQL configuration to be
 able to connect to the PostgreSQL database:
@@ -49,7 +49,7 @@ above was also created at that time.
 
 ### Use ConfigMap
 
-Let's modify our application to use it. We will use the [Spring Cloud Kubernetes](https://github.com/fabric8io/spring-cloud-kubernetes#configmap-propertysource)
+Let's modify our application to use it. We will use the [Spring Cloud Kubernetes](https://github.com/fabric8io/spring-cloud-kubernetes#configmap-propertysource){:target="_blank"}
 project. Using this dependency, Spring Boot will search for a ConfigMap (by default with the same name as
 the application) to use as the source of application configuration during application bootstrapping and
 if enabled, triggers hot reloading of beans or Spring context when changes are detected on the ConfigMap.
@@ -72,7 +72,7 @@ need to grant permission to the Spring Boot service account to access the OpenSh
 ConfigMaps. To grant this permission, run:
 
 ~~~bash
-oc policy add-role-to-user view -n dev -z default
+oc policy add-role-to-user view -n dev{{PROJECT_SUFFIX}} -z default
 ~~~
 
 Let's re-run our tests just to make sure our new additions don't cause breakage:
@@ -100,10 +100,7 @@ Commit the `pom.xml` changes to code repo:
 
 This will trigger the pipeline build.
 
-Open the OpenShift Web Console and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the updated catalog code:
-`{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
-
-|**CAUTION:** Replace `GUID` with the guid provided to you.
+Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}){:target="_blank"} and click on **Builds** > **Pipelines** to watch the pipeline build and deploy the updated catalog code:
 
 ![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
 
@@ -175,6 +172,6 @@ The _Lytro Camera_ product should now cost `100`:
 
 You've now got a quick way to alter service configuration without redeploying! As the application moves
 through different environments (test, staging, production), it will pick up its configuration via a
-[ConfigMap](https://docs.openshift.org/latest/dev_guide/configmaps.html) within each environment, rather than being re-compiled with the new configuration each time.
+[ConfigMap](https://docs.openshift.org/latest/dev_guide/configmaps.html){:target="_blank"} within each environment, rather than being re-compiled with the new configuration each time.
 This mechanism can also be used to alter business logic in addition to infrastructure (database, etc)
 configuration.

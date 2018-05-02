@@ -510,7 +510,7 @@ Before we deploy the a new version of the catalog service our application now de
 <<<<<<< HEAD
 Go to the openshift web console
 
-* OpenShift Web Console: `{{OPENSHIFT_MASTER_URL}}`{: style="color: blue"}
+* OpenShift Web Console: {{OPENSHIFT_MASTER_URL}}
 * Username: `{{OPENSHIFT_USERNAME}}`
 * Password: `{{OPENSHIFT_PASSWORD}}`
 

@@ -17,25 +17,25 @@ And then choose the following.
 #### Addresses
 
 OpenShift: <br/>
-`{{ OPENSHIFT_MASTER_URL }}`{: style="color: blue"}
+{{ OPENSHIFT_MASTER_URL }}
 
 Eclipse Che: <br/>
-`{{ ECLIPSE_CHE_URL }}`{: style="color: blue"} 
+{{ ECLIPSE_CHE_URL }}
 
 Git Server Web: <br/>
-`http://{{ GIT_HOSTNAME }}`{: style="color: blue"}
+http://{{ GIT_HOSTNAME }}
 
 Nexus Repository Manager: <br/>
-`{{ NEXUS_EXTERNAL_URL }}`{: style="color: blue"}
+{{ NEXUS_EXTERNAL_URL }}
 
 Grafana: <br/>
-`{{ GRAFANA_URL }}`{: style="color: blue"}
+{{ GRAFANA_URL }}
 
 Jaeger Open Tracing: <br/>
-`{{ JAEGER_URL }}`{: style="color: blue"}
+{{ JAEGER_URL }}
 
 Prometheus: <br/>
-`{{ PROMETHEUS_URL }}`{: style="color: blue"}
+{{ PROMETHEUS_URL }}
 
 OpenShift Docs: <br/>
 [{{ OPENSHIFT_DOCS_BASE }}]({{ OPENSHIFT_DOCS_BASE }}){:target="_blank"} 

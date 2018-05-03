@@ -421,7 +421,7 @@ Run the test again.
 [ERROR] Failures: 
 [ERROR]   ProductEndpointTest.test_retrieving_one_product:84 expected:<[98]> but was:<[0]>
 [INFO] 
-[ERROR] Tests run: 5, Failures: 1, Errors: 0, Skipped: 0
+[ERROR] Tests run: 6, Failures: 1, Errors: 0, Skipped: 0
 [INFO] 
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
@@ -476,7 +476,7 @@ Now, run the tests again and verify that even if we return a server error for in
 ~~~shell
 [INFO] Results:
 [INFO] 
-[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
 [INFO] 
 ...
 [INFO] ------------------------------------------------------------------------

@@ -97,8 +97,8 @@
         name: openshift_eclipse_che
       vars:
         project_name: "{{ lab_infra_project }}"
-        #che_version: "6.3.0"
-        che_version: "latest"
+        che_version: "6.4.1"
+        #che_version: "latest"
         route_suffix: "{{ apps_hostname_suffix }}"
       tags: eclipse-che
 

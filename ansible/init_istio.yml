@@ -31,6 +31,13 @@
   shell: "{{ openshift_cli }} create -f https://raw.githubusercontent.com/siamaksade/openshift-ansible/istio-3.9-0.7.1/istio/istio_installer_job.yaml -n istio-system"
   when: istio_project_result|failed
 
+- name: wait for istio sidecar-injector to initialize
+  shell: "{{ openshift_cli }} get deployment istio-sidecar-injector -o jsonpath='{.status.availableReplicas}' -n istio-system"
+  register: sidecar_injector_replicas
+  until: sidecar_injector_replicas.stdout == "1"
+  retries: "30"
+  delay: "30"
+
 # create prod
 - name: create prod project
   shell: |

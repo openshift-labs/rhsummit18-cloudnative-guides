@@ -5,12 +5,17 @@
   ignore_errors: true
   changed_when: false
 
+- name: create local openshift config directory if doesn't exist
+  file:
+    path: /var/lib/origin/openshift.local.config
+    state: directory
+  when: istio_project_result|failed
+
 - name: create istio host inventory
-  unarchive:
-    remote_src: yes
-    src: "https://raw.githubusercontent.com/openshift-istio/openshift-ansible/istio-3.9-0.7.1/istio/istio.inventory"
+  get_url:
+    url: "https://raw.githubusercontent.com/openshift-istio/openshift-ansible/istio-3.9-0.7.1/istio/istio.inventory"
     dest: "/var/lib/origin/openshift.local.config/istio.inventory"
-  when: istio_project_result|failed    
+  when: istio_project_result|failed
 
 - name: create istio-system project
   shell: |
@@ -46,16 +51,19 @@
     - oc_kube_config is not none
     - oc_kube_config|trim() != ""
 
+- set_fact:
+    templates_base_url: https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift
+
 - name: deploy web in prod
-  shell: "{{ openshift_cli }} process -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/web-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }}"
+  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/web-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | oc create -f - -n prod{{ project_suffix }}"
 
 - name: deploy inventory in prod
-  shell: "{{ openshift_cli }} process -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/inventory-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }}"
+  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/inventory-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | oc create -f - -n prod{{ project_suffix }}"
 
 - name: deploy catalog in prod
-  shell: "{{ openshift_cli }} process -f https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift/catalog-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }}"
+  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/catalog-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | oc create -f - -n prod{{ project_suffix }}"
 
-- name: Add jaeger tracing to the catalog in prod
+- name: add jaeger tracing to the catalog in prod
   shell: |
     {{ openshift_cli }} env -n prod{{ project_suffix }} dc/catalog JAEGER_SERVICE_NAME=catalog \
           JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14267/api/traces \

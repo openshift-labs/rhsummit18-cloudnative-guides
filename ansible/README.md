@@ -56,9 +56,20 @@ Tips
   docker pull openshiftdemos/gogs:0.11.34
   docker pull eclipse/che:6.3.0
   docker pull osevg/workshopper:latest
-  docker pull siamaksade/centos_jdk8
+  docker pull siamaksade/che-centos-jdk8:rhsummit18-cloudnative
   docker pull siamaksade/rhsummit18-cloudnative-inventory:prod
   docker pull siamaksade/rhsummit18-cloudnative-web:prod
+  docker pull siamaksade/rhsummit18-cloudnative-inventory:prod
+  docker pull siamaksade/rhsummit18-cloudnative-web:prod
+  docker pull openshiftistio/origin-ansible:0.7.1
+  docker pull openshiftistio/mixer-centos7:0.7.1
+  docker pull openshiftistio/istio-ca-centos7:0.7.1
+  docker pull openshiftistio/proxy-centos7:0.7.1
+  docker pull openshiftistio/proxy-init-centos7:0.7.1
+  docker pull openshiftistio/pilot-centos7:0.7.1
+  docker pull prom/statsd-exporter:v0.5.0
+  docker pull openshiftistio/sidecar-injector-centos7:0.7.1
+  docker pull registry.centos.org/rhsyseng/elasticsearch:6.2.2
   ```
 
 * Add an admin user to the cluster. Run the following as `system:admin`:

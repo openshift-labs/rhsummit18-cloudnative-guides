@@ -13,9 +13,8 @@
     github_account: openshift-labs
     github_ref: master
     project_suffix: 
-    istio_version: 0.6.0
+    istio_version: 0.7.1
     clean_init: false
-    istio_options: 
   tasks:
     - include_role:
         name: openshift_common_facts

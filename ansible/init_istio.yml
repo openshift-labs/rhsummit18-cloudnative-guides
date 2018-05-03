@@ -43,25 +43,17 @@
     {{ openshift_cli }} adm policy add-scc-to-user anyuid -z default prod{{ project_suffix }}
     {{ openshift_cli }} adm policy add-role-to-user admin system:serviceaccount:prod{{ project_suffix }}:default -n prod{{ project_suffix }}
 
-- name: set istioctl kubeconfig
-  set_fact:
-    istio_options: "--kubeconfig {{ oc_kube_config }}"
-  when: 
-    - oc_kube_config is defined
-    - oc_kube_config is not none
-    - oc_kube_config|trim() != ""
-
 - set_fact:
     templates_base_url: https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift
 
 - name: deploy web in prod
-  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/web-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | oc create -f - -n prod{{ project_suffix }}"
+  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/web-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | {{ openshift_cli }} create -f - -n prod{{ project_suffix }}"
 
 - name: deploy inventory in prod
-  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/inventory-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | oc create -f - -n prod{{ project_suffix }}"
+  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/inventory-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | {{ openshift_cli }} create -f - -n prod{{ project_suffix }}"
 
 - name: deploy catalog in prod
-  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/catalog-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | oc create -f - -n prod{{ project_suffix }}"
+  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/catalog-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | {{ openshift_cli }} create -f - -n prod{{ project_suffix }}"
 
 - name: add jaeger tracing to the catalog in prod
   shell: |

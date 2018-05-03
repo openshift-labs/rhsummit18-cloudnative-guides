@@ -122,8 +122,8 @@
       tags: eclipse-che
 
     # deploy istio and prod
-    - include_tasks: init_istio.yml
-      tags: istio
+    # - include_tasks: init_istio.yml
+    #   tags: istio
 
     # validate cluster
     - name: check openjdk image stream installed

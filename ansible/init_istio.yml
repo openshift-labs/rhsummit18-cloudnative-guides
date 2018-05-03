@@ -14,20 +14,20 @@
 
 - name: create istio-system project
   shell: |
-    {{ openshift_cli }} oc new-project istio-system
-    {{ openshift_cli }} oc patch namespace istio-system -p '{"metadata":{"annotations":{"openshift.io/node-selector":"node-role.kubernetes.io/master=true"}}}'
-    {{ openshift_cli }} oc create sa openshift-ansible -n istio-system
-    {{ openshift_cli }} oc adm policy add-scc-to-user privileged -z openshift-ansible -n istio-system
+    {{ openshift_cli }} new-project istio-system
+    {{ openshift_cli }} patch namespace istio-system -p '{"metadata":{"annotations":{"openshift.io/node-selector":"node-role.kubernetes.io/master=true"}}}'
+    {{ openshift_cli }} create sa openshift-ansible -n istio-system
+    {{ openshift_cli }} adm policy add-scc-to-user privileged -z openshift-ansible -n istio-system
   when: istio_project_result|failed
 
 - name: import elasticsearch imagestream due to issue openshift-istio/openshift-ansible#3
   shell: |
-    {{ openshift_cli }} oc import-image elasticsearch --from="registry.centos.org/rhsyseng/elasticsearch" --all --confirm -n istio-system
+    {{ openshift_cli }} import-image elasticsearch --from="registry.centos.org/rhsyseng/elasticsearch" --all --confirm -n istio-system
   when: istio_project_result|failed
 
 - name: deploy istio installer job
   shell: |
-    {{ openshift_cli }} oc create -f oc create -f https://raw.githubusercontent.com/openshift-istio/openshift-ansible/istio-3.9-0.7.1/istio/istio_installer_job.yaml -n istio-system
+    {{ openshift_cli }} create -f https://raw.githubusercontent.com/openshift-istio/openshift-ansible/istio-3.9-0.7.1/istio/istio_installer_job.yaml -n istio-system
   when: istio_project_result|failed
 
 # create prod

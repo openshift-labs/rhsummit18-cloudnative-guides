@@ -102,15 +102,6 @@
               {{ istio_dir.path }}/istio-{{ istio_version }}/bin/istioctl kube-inject {{ istio_options }} -f - | \
                   {{ openshift_cli }} apply -f - -n prod{{ project_suffix }}
 
-- name: deploy web in prod
-  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/web-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | {{ openshift_cli }} create -f - -n prod{{ project_suffix }}"
-
-- name: deploy inventory in prod
-  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/inventory-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | {{ openshift_cli }} create -f - -n prod{{ project_suffix }}"
-
-- name: deploy catalog in prod
-  shell: "{{ openshift_cli }} process -f {{ templates_base_url }}/catalog-template.yml --param=IMAGE_VERSION=prod -n prod{{ project_suffix }} | {{ openshift_cli }} create -f - -n prod{{ project_suffix }}"
-
 - name: add jaeger tracing to the catalog in prod
   shell: |
     {{ openshift_cli }} env -n prod{{ project_suffix }} dc/catalog JAEGER_SERVICE_NAME=catalog \

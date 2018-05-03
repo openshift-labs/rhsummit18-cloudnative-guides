@@ -44,7 +44,7 @@ The trace shows that our inventory service is pretty slow and take about 400ms t
 
 ### Finding a solution
 
-After discussing the issue with the inventory team, they confirmed that calls to `/service/inventory/{itemid}` is slow since it's not cached. They suggest that we instead call **/service/inventory/all** which returns a cached list of all products inventory status.
+After discussing the issue with the inventory team, they confirmed that calls to `/service/inventory/{itemid}` is slow since it's not cached. They suggest that we instead call `/service/inventory/all` which returns a cached list of all products inventory status.
 
 Let's investigate that API call.
 

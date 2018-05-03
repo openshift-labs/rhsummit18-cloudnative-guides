@@ -20,9 +20,9 @@
 - name: create istio-system project
   shell: |
     {{ openshift_cli }} new-project istio-system
-    {{ openshift_cli }} patch namespace istio-system -p '{"metadata":{"annotations":{"openshift.io/node-selector":"node-role.kubernetes.io/master=true"}}}'
     {{ openshift_cli }} create sa openshift-ansible -n istio-system
     {{ openshift_cli }} adm policy add-scc-to-user privileged -z openshift-ansible -n istio-system
+    {{ openshift_cli }} label node master.example.com node-role.kubernetes.io/compute=true --overwrite
   when: istio_project_result|failed
 
 - name: deploy istio installer job

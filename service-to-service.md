@@ -426,10 +426,6 @@ Run the test again.
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 19.616 s
-[INFO] Finished at: 2018-05-02T18:34:04+00:00
-[INFO] Final Memory: 31M/56M
-[INFO] ------------------------------------------------------------------------
 ~~~
 
 This time we can see that the test ends with a nasty errors and if we look closer we can see that the call to our catalog service fails. The reason is that the catalog service does a number of calls to `/services/inventory/{itemId}` and even if 7 out of 8 calls where successful, one failure causes our catalog service to fail as well. We need a fallback strategy!
@@ -481,10 +477,6 @@ Now, run the tests again and verify that even if we return a server error for in
 ...
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 21.867 s
-[INFO] Finished at: 2018-05-02T19:04:40+00:00
-[INFO] Final Memory: 31M/47M
 [INFO] ------------------------------------------------------------------------
 ~~~
 

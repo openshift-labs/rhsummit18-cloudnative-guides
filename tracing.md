@@ -1,4 +1,4 @@
-## Distributed tracing
+## Distributed Tracing
 
 Before we start this scenario you will have to issue the following command 
 
@@ -43,7 +43,7 @@ Click on one of the results and you should see a trace like this:
 
 The trace shows that our inventory service is pretty slow and take about 400ms to respond. This in turn is causing our services to response slow since it calls the inventory multiple times in sequence.
 
-### Finding a solution
+### Finding a Solution for Slow Inventory
 
 After discussing the issue with the inventory team, they confirmed that calls to `/service/inventory/{itemid}` is slow since it's not cached. They suggest that we instead call `/service/inventory/all` which returns a cached list of all products inventory status.
 
@@ -76,27 +76,28 @@ Then, open the `com.redhat.coolstore.service.ProductEndpoint` and replace the `r
     @ResponseBody
     @GetMapping("/products")
     public ResponseEntity<List<Product>> readAll() {
-        List<Product> productList = productRepository.readAll();
+        Spliterator<Product> iterator = productRepository.findAll().spliterator();
+        List<Product> products = StreamSupport.stream(iterator, false).collect(Collectors.toList());
 
         //Get all the inventory and convert it to a Map.
         Map<String, Integer> inventoryMap = inventoryClient.getInventoryStatusForAll()
                 .stream()
                 .collect(Collectors.toMap(
-                  (Inventory i) -> i.itemId, (Inventory i) -> i.quantity)
+                  (Inventory i) -> i.getItemId(), (Inventory i) -> i.getQuantity())
                 );
 
-        productList.stream().forEach(p -> p.quantity = inventoryMap.get(p.itemId));
-        return new ResponseEntity<List<Product>>(productList,HttpStatus.OK);
+        products.stream().forEach(p -> p.setQuantity(inventoryMap.get(p.getItemId())));
+        return new ResponseEntity<List<Product>>(products,HttpStatus.OK);
     }
 ~~~
 
 |**NOTE:** We are converting the `List` returned from the `InventoryClient` to a `Map` since that will make it much easier to update the productList with the correct quantity.
 
-### Updating the unit test
+### Updating the Unit Test
 
-We also need to update the test case to support calls to `/services/inventory/all`
+We also need to update the test case to support calls to `/services/inventory/all`.
 
-Start by adding a String with the return value we got from the curl request before like this:
+Open `ProductEndpointTest` and start by adding a `String` with the return value we got from the curl request before like this:
 
 ~~~java
     private static final String ALL_INVENTORY="[{\"itemId\":\"165613\",\"quantity\":303},{\"itemId\":\"165614\",\"quantity\":54},{\"itemId\":\"165954\",\"quantity\":407},{\"itemId\":\"329199\",\"quantity\":123},{\"itemId\":\"329299\",\"quantity\":78},{\"itemId\":\"444434\",\"quantity\":343},{\"itemId\":\"444435\",\"quantity\":85},{\"itemId\":\"444436\",\"quantity\":245}]";
@@ -109,19 +110,38 @@ Then add the following to the HoverFly ClassRule declaration:
       .willReturn(success(ALL_INVENTORY, "application/json"))
 ~~~
 
-We are now ready to run the tests and verify that our application passes the unit test, but clicking on the command palette and choose test.
+We are now ready to run the tests and verify that our application passes the unit test, but clicking on the command palette and choose **test**.
 
-If it for some reason doesn't work, please go back an check the changes that you have done. Otherwise, go a head and commit and push your changes.
+```
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+ ...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+```
 
-### Deploy the application in production
+If it for some reason doesn't work, please go back an check the changes that you have done. Otherwise, go a head and commit and push your changes to the git repository.
 
-First, make sure that the catalog build pipeline is executed successfully and then verify that our changes works in the dev project. 
+![Git Commit]({% image_path tracing-inventory-commit.png %}){:width="600px"}
 
-After that go a head and start the release pipeline.
 
-### Verify the changes in production
+### Deploy the Application in Production
 
-When the release pipeline is done execute the following command a couple of times.
+First, make sure that the **catalog-build** pipeline is executed successfully and 
+then verify that our changes works in the **Catalog DEV** project. 
+
+After that go to **Builds** > **Pipelines** form the left-side menu and start the **catalog-release** pipeline 
+to promote the build to production environment.
+
+![Build and Release Pipeline]({% image_path tracing-pipelines.png %}){:width="800px"}
+
+
+### Verify the Changes in Production
+
+When the release pipeline is done execute the following command in the Eclipse Che **Terminal** a couple of times.
 
 ~~~shell
 curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/products

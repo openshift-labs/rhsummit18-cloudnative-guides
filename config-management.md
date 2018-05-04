@@ -121,10 +121,6 @@ At the end of the output you should see the following which says all tests have 
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 16.273 s
-[INFO] Finished at: 2018-05-02T16:54:53+00:00
-[INFO] Final Memory: 28M/48M
-[INFO] ------------------------------------------------------------------------
 ~~~
 
 If your test fails go back and check previous steps before moving to the next section.

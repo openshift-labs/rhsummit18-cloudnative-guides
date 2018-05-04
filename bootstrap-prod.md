@@ -241,16 +241,21 @@ the **catalog-release** pipeline.
 
 ![Catalog Release Pipeline]({% image_path boostrap-prod-release-pipeline.png %}){:width="900px"}
 
+Did you notice that while the **catalog-release** pipeline is running, the **catalog-build** pipeline also 
+started running? The reason for that is that during the release process, `pom.xml` is modified to increase the version 
+number and is pushed back to the catalog git repository. You wanted **catalog-build** pipeline 
+to run on every change that takes place in the git repository, right?
+
 After the release pipeline is completed successfully (all green, yaay!),
 [go the git repository in your browser](http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog/releases){:target="_blank"} to
 review the Catalog release that is created in the Git repository.
 
 ![Catalog Git Releases]({% image_path boostrap-prod-git-releases.png %}){:width="900px"}
 
-Navigate to the [Nexus Maven Repository]({{NEXUS_EXTERNAL_URL}}/#browse/browse:maven-all-public:com%2Fredhat%2Fcoolstore%2Fcatalog){:target="_blank"} to review the binary release of
+Navigate to the [Nexus Maven Repository]({{NEXUS_EXTERNAL_URL}}/#browse/browse:maven-releases:com%2Fredhat%2Fcoolstore%2Fcatalog){:target="_blank"} to review the binary release of
 the Catalog service in form of a JAR file:
 
 ![Catalog Released Artifacts in Nexus]({% image_path boostrap-prod-nexus-releases.png %}){:width="800px"}
 
 Go to the [CoolStore Production Project Console]({{ OPENSHIFT_MASTER_URL }}/console/project/prod{{PROJECT_SUFFIX}}){:target="_blank"} and click on the **web-ui** route url to verify
-CoolStore application is working (or [click here to access it directly](http://web-ui-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"}.
+CoolStore application is working ([or click here to access it directly](http://web-ui-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"}).

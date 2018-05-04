@@ -3,7 +3,8 @@
 Before we start this scenario you will have to issue the following command 
 
 ~~~shell
-oc env -n prod{{PROJECT_SUFFIX}} dc/inventory SERVICE_DELAY=400 --overwrite && oc rollout status dc/inventory -n prod{{PROJECT_SUFFIX}}
+oc env -n prod{{PROJECT_SUFFIX}} dc/inventory SERVICE_DELAY=400 --overwrite 
+oc rollout status dc/inventory -n prod{{PROJECT_SUFFIX}}
 ~~~
 
 |**NOTE:** This command will introduce a delay in our inventory service so that each call will take > 400ms

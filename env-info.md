@@ -13,29 +13,28 @@ And then choose the following.
 * Lab Code: `L1013 - Getting Started with Cloud-Native Apps`
 * Activation Key: `native`
 
-
 #### Addresses
 
 OpenShift: <br/>
-{{ OPENSHIFT_MASTER_URL }}
+[{{ OPENSHIFT_MASTER_URL }}]({{ OPENSHIFT_MASTER_URL }}){:target="_blank"} 
 
 Eclipse Che: <br/>
-{{ ECLIPSE_CHE_URL }}
+[{{ ECLIPSE_CHE_URL }}]({{ ECLIPSE_CHE_URL }}){:target="_blank"} 
 
 Git Server Web: <br/>
-http://{{ GIT_HOSTNAME }}
+[http://{{ GIT_HOSTNAME }}](http://{{ GIT_HOSTNAME }}){:target="_blank"} 
 
 Nexus Repository Manager: <br/>
-{{ NEXUS_EXTERNAL_URL }}
+[{{ NEXUS_EXTERNAL_URL }}]({{ NEXUS_EXTERNAL_URL }}){:target="_blank"} 
 
 Grafana: <br/>
-{{ GRAFANA_URL }}
+[{{ GRAFANA_URL }}]({{ GRAFANA_URL }}){:target="_blank"} 
 
 Jaeger Open Tracing: <br/>
-{{ JAEGER_URL }}
+[{{ JAEGER_URL }}]({{ JAEGER_URL }}){:target="_blank"} 
 
 Prometheus: <br/>
-{{ PROMETHEUS_URL }}
+[{{ PROMETHEUS_URL }}]({{ PROMETHEUS_URL }}){:target="_blank"} 
 
 OpenShift Docs: <br/>
 [{{ OPENSHIFT_DOCS_BASE }}]({{ OPENSHIFT_DOCS_BASE }}){:target="_blank"} 

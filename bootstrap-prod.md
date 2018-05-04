@@ -1,10 +1,10 @@
 ## Automate PROD Release
 
 In previous labs you created the Catalog service and now it's time to release it 
-to the production. Releasing software to production is always associated with mid-night 
+to the production environment. Releasing software to production is always associated with midnight
 caffeine-intensive processes with traumatizing effects when it does not go well!
 
-As you have noticed, automation is a key principle when building Cloud-Native applications, 
+As you have noticed, automation is a key principle when building cloud native applications,
 and that does not exclude the release process. Although many teams might not want to automatically 
 release their software into production, the process still has to be automated and be able to 
 go forward with push of a button.
@@ -16,10 +16,8 @@ In this lab, you will create a release pipeline that creates a release for the C
 * Building and tagging the release container image for Catalog 
 * Deploy the release container image into production
 
-
 The production environment is already set up on your OpenShift cluster with the project 
 name **CoolStore PROD**. Browse the production project in the OpenShift Web Console.
-
 
 #### Define Release Pipeline
 
@@ -62,22 +60,23 @@ The above stage uses the [Maven Release Plugin](http://maven.apache.org/maven-re
 the Catalog code and JAR archives in the Git repository and Maven repository respectively. In addition, this stage 
 performs the following steps as the part of the release process:
 
-* Check that there are no SNAPSHOT dependencies in `pom.xml`
-* Change the version in the POMs from `x-SNAPSHOT` to a new version 
-* Transform the Git information in the POM to include the final destination of the tag
-* Run the project tests against the modified POMs to confirm everything is in working order
-* Commit the modified POMs to the Catalog Git repository
-* Tag the code in the Git repository with a version name
-* Bump the version in the POMs to a new value `y-SNAPSHOT`
-* Commit the modified POMs
+* Checks that there are no SNAPSHOT dependencies in `pom.xml`
+* Changes the version in the POMs from `x-SNAPSHOT` to a new version
+* Transforms the Git information in the POM to include the final destination of the tag
+* Runs the project tests against the modified POMs to confirm everything is in working order
+* Commits the modified POMs to the Catalog Git repository
+* Tags the code in the Git repository with a version name
+* Bumps the version in the POMs to a new value `y-SNAPSHOT`
+* Commits the modified POMs
 
 Since the release process involves committing code to the Catalog Git repository, we would expect the build pipeline 
 also get triggered during the release in order to build and test the new `y-SNAPSHOT` version fo the Catalog service.
 
-The next stage is the release pipeline is to create the release container image based on the released Catalog 
+The next stage in the release pipeline is to create the release container image based on the released Catalog
 artifacts. The release container image is what will be used across all environments and will be verified through 
-various tests to make sure it can to into production. It's critical to build the container image only once and 
-perform all tests on the exact same release image to ensure the integrity of the release.
+various tests to make sure it can to into production. It's critical to build the container image once and only once and
+perform all tests on the exact same release image to ensure the integrity of the release as it is promoted across different
+environments (in this case, _dev > prod_).
 
 Add the `Release Image` stage right after `Release Code` in the `Jenkinsfile.release`
 
@@ -99,9 +98,9 @@ Add the `Release Image` stage right after `Release Code` in the `Jenkinsfile.rel
 Notice that the Catalog release image is tagged with the release version, similar to the JAR files in the Maven 
 repository.
 
-The next stage, is to promote the Catalog release image to production and deploy it. You can take advantage of 
+The next stage is to promote the Catalog release image to production and deploy it. You can take advantage of
 [OpenShift deployment triggers]({{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers){:target="_blank"} 
-to automate deployment of the new release. A deployment triggers can drive the creation of new deployments 
+to automate deployment of the new release. Deployment triggers can drive the creation of new deployments
 in response to events (new images built, configuration changes) inside the OpenShift cluster.
 
 Add the `Promote to PROD` stage right after `Release Image` in the `Jenkinsfile.release`
@@ -122,7 +121,7 @@ Add the `Promote to PROD` stage right after `Release Image` in the `Jenkinsfile.
 ~~~
 
 Since the Catalog deployment in production tracks the `catalog:prod` image, tagging the new Catalog release 
-image with `prod` in production would trigger an automatic deployment of the new image. 
+image with `prod` in production will trigger an automatic deployment of the new image.
 
 Commit the `Jenkinsfile.release` into the Git repository by right-clicking on the catalog in the project 
 explorer and then on **Git** > **Commit**.
@@ -140,14 +139,14 @@ in the repository. For doing so, the pipeline needs to authenticate itself to th
 Jenkins provides a central way to define and consume credentials (e.g. Git repository username and password) 
 in the pipeline and in fact anywhere else applicable throughout Jenkins. When a credential is defined in 
 Jenkins, it can be used inside the pipelines using the `withCredentials() {...}` expression. It will essentially 
-retrieve the credential from the Jenkins credentials store and injects in inside the pipeline as environment variables.
+retrieve the credentials from the Jenkins credentials store and inject them into the pipeline as environment variables.
 
-Jenkins credentials are very useful but following immutable infrastructure principles, you shouldn't store sensitive 
+Jenkins credentials are very useful, but following immutable infrastructure principles, you shouldn't store sensitive
 information or any configuration for that matter inside Jenkins.
 
 Fortunately, OpenShift has an elegant way to integrate 
 [the built-in secret management]({{OPENSHIFT_DOCS_BASE}}/dev_guide/secrets.html){:target="_blank"} 
-that exists in Kubernetes with the Jenkins credentials. The  Jenkins container image on OpenShift has 
+that exists in Kubernetes with Jenkins credentials. The Jenkins container image on OpenShift has
 [a number of plugins pre-installed]({{OPENSHIFT_DOCS_BASE}}/using_images/other_images/jenkins.html#sync-plug-in){:target="_blank"} 
 that automatically import certain secrets into Jenkins credentials which can then be used in the pipeline. Note 
 that the [sync plugin](https://github.com/openshift/jenkins-sync-plugin){:target="_blank"} 
@@ -187,8 +186,8 @@ the `.settings.xml` maven settings to configure the Maven Release Plugin.
 #### Pipeline Access to Production
 
 OpenShift by default maintains a tight access control regime and does not allow services from one project to 
-modify other projects. In this lab, you want Jenkins which is executing the release pipeline to be able to tag 
-images in the production environment and deploy containers. For that, you have to explicitly give access to the 
+modify other projects. In this lab, you want Jenkins to be able to tag
+images in the production environment and deploy containers while executing the release pipeline. For that, you have to explicitly give access to the
 Jenkins pod, or to say more accurately to the [service account]({{OPENSHIFT_DOCS_BASE}}/dev_guide/service_accounts.html){:target="_blank"} 
 that the Jenkins pod uses for authentication and making API calls to OpenShift.
 
@@ -246,7 +245,7 @@ started running? The reason for that is that during the release process, `pom.xm
 number and is pushed back to the catalog git repository. You wanted **catalog-build** pipeline 
 to run on every change that takes place in the git repository, right?
 
-After the release pipeline is completed successfully (all green, yaay!),
+After the release pipeline completes successfully (all green, yaay!),
 [go the git repository in your browser](http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog/releases){:target="_blank"} to
 review the Catalog release that is created in the Git repository.
 

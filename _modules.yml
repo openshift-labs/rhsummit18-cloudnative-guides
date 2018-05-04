@@ -9,7 +9,7 @@ modules:
   service-to-service:
     name: Connect Catalog to Inventory
   config-management:
-    name: Externalise Configuration
+    name: Externalize Configuration
   bootstrap-prod:
     name: Automate Production Releases
   tracing:

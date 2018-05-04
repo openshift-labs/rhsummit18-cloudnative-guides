@@ -521,23 +521,11 @@ with their default values.
 
 |**NOTICE:** The inventory-mock template has already been installed in OpenShift since other teams are also depending using this mockup application.
 
-Now, before we deploy our application we need to update the configmap with the service URL. We can of course automate this via for example the pipeline, but for simplicity reasons we are going to use the web console for that.
+Remember that the Catalog service uses external configurations from a configmap? Well, it needs to have the same config that you did for the test so that it can find the Inventory service. This is however is already done via the templates you deployed. In order to verify, in the left-side menu click on **Resources** > **Config Maps** and then on **catalog**. 
 
-On the left-side menu click on **Resources** > **Config Maps** and then **catalog** to open the 
-configmap that is used by the Catalog service. Click on the **Actions** menu and then **Edit**.
+![Catalog ConfigMap]({% image_path service-to-service-configmap.png %}){:width="640px"}
 
-Add the following property as the last line and then click on **Save**.
-
-~~~shell
-ribbon.listOfServers=inventory:8080
-~~~
-
-|**STEP BY STEP:** Update the configmap
-|![New file]({% image_path service-to-service-configmap.gif %}){:width="640px"}
-
-|**NOTICE:** We mentioned before that Feign has a number of different possibilities to use a service repository like Eureka, but when using OpenShift that is not necessary. OpenShift (and Kubernetes) has a concept of a [Service]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/pods_and_services.html#services){:target="_blank"} that provides built-in service discovery 
-by automatically be load balanced between multiple instances of the same service with a fixed service name that doesn't change 
-across environments. Later one we will also look at how Istio service mesh can provide more advanced routing and fail-over.
+|**NOTICE:** We mentioned before that Feign has a number of different possibilities to use a service repository like Eureka, but when using OpenShift that is not necessary. OpenShift (and Kubernetes) has a concept of a [Service]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/pods_and_services.html#services){:target="_blank"} that provides built-in service discovery by automatically be load balanced between multiple instances of the same service with a fixed service name that doesn't change across environments. Later one we will also look at how Istio service mesh can provide more advanced routing and fail-over.
 
 Now, that everything is setup we are ready to deploy our new version of the application by commit and push the code changes we have done.
 

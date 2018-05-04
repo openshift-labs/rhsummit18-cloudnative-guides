@@ -112,16 +112,16 @@ Then add the following to the HoverFly ClassRule declaration:
 
 We are now ready to run the tests and verify that our application passes the unit test, but clicking on the command palette and choose **test**.
 
-```
+~~~shell
 [INFO] Results:
 [INFO] 
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 [INFO] 
  ...
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-```
+~~~
 
 If it for some reason doesn't work, please go back an check the changes that you have done. Otherwise, go a head and commit and push your changes to the git repository.
 

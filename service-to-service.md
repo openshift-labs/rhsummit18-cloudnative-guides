@@ -1,10 +1,11 @@
 ## Connect the Catalog Service to Inventory Service.
 
-We now have a working Catalog Service, but you might have notices that we still don't have inventory information. 
+We now have a working Catalog Service, but you might have noticed that we still don't have inventory information being displayed.
 
 ![Inventory Undefined]({% image_path create-catalog-inventory-undefined.png %}){:width="700px"}
 
-The UI team has asked us to include inventory information in the responses when calling the catalog service. However, the inventory information is owned by another team. The inventory application expose a REST endpoint that we can use to collect inventory information the response. 
+The UI team has asked us to include inventory information in the responses when calling the catalog service. However, the inventory information
+is owned by another team. The inventory application exposes a REST endpoint that we can use to collect inventory information the response.
 
 By calling the inventory service in production like this:
 
@@ -25,7 +26,7 @@ Now that we know what the inventory service looks like and how to call it we can
 
 ### Creating the Inventory Model
 
-We need a inventory model that matches the return from the inventory service so we start by creating a new Java class under `src/main/java/com/redhat/coolstore/model` called `Inventory` that looks like this:
+We need an inventory model that matches the return format from the inventory service so we start by creating a new Java class under `src/main/java/com/redhat/coolstore/model` called `Inventory` that looks like this:
 
 ~~~java
 package com.redhat.coolstore.model;
@@ -36,27 +37,28 @@ public class Inventory {
 }
 ~~~
 
-Generate the getter and setter methods using `Ctrl+Space` and writing `get` or `set`.
+Generate the getter and setter methods by writing `get` or `set` and then using `Ctrl+Space`, as you did before, for each of the above fields.
 
-We also need to extend the `Product` model to contain the quantity information. Add the field to the 
-`Product` class and generate the getter and setter methods.
+We also need to extend the `Product` model to contain the quantity information. Add a field to the
+`Product` class and generate the getter and setter methods again:
 
 ~~~java
     @Transient
     private int quantity;
 ~~~
 
-Note the `javax.persistence.Transient` annotation which shows that this field should not be persisted in the product table 
-and it's rather coming from somewhere else (the inventory table!).
+Note the `javax.persistence.Transient` annotation which shows that this field should not be persisted into the product table
+since it's owned by something else (the inventory table!).
 
 |**STEP BY STEP:** Creating the inventory model
 |![New file]({% image_path service-to-service-model.gif %}){:width="900px"}
 
 ### Creating the Inventory REST Client
 
-Spring Cloud has a client library called Feign that will save us a lot of boiler plate code. To implement a REST client in Feign all you have to do is to create a interface and annotate it with the necessary clients.
+Spring Cloud uses a client library called [Feign](https://github.com/OpenFeign/feign){:target="_blank"} that will save us from writing a lot of boilerplate code.
+To implement a REST client in Feign all you have to do is create an interface and annotate it with the necessary clients.
 
-First, we need to add a couple of dependencies. Add the following the `pom.xml` in the dependency section, preferably right above `<!-- Testing -->`:
+First, we need to add a couple of dependencies. Add the following to the `pom.xml` in the dependency section, preferably right above `<!-- Testing -->`:
 
 ~~~xml
 <dependency>
@@ -68,7 +70,8 @@ First, we need to add a couple of dependencies. Add the following the `pom.xml` 
 
 |**NOTE:** After changing the `pom.xml` it's recommended that you build the project so that new dependencies are downloaded
 
-Now we are ready to create a client. Using Feign all we have to do to is to declare a interface and annotate it with `@FeignClient`. We will create the interface in the `com.redhat.coolstore.client` package and call it `InventoryClient`
+Now we are ready to create a client. Using Feign all we have to do to is to declare an interface and annotate it with `@FeignClient`.
+Create the interface in the `com.redhat.coolstore.client` package and call it `InventoryClient`
 
 ~~~java
 package com.redhat.coolstore.client;
@@ -80,7 +83,7 @@ public interface InventoryClient {
 ~~~
 
 We also have to define a method that returns the inventory object for the given item id and also give Feign 
-some meta data about the request to the inventory service using annotations like this:
+some meta data about the request to the inventory service using annotations. Add this to the `InventoryClient` interface:
 
 ~~~java
     @RequestMapping(method = RequestMethod.GET, value = "/services/inventory/{itemId}", consumes = {MediaType.APPLICATION_JSON_VALUE})
@@ -100,7 +103,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.redhat.coolstore.model.Inventory;
 ~~~
 
-Finally, we also have to tell Spring to look for the `@FeginClient` annotation and automatically create an implementation for it. That is done by enabling Feigh on the Spring application.
+Finally, we also have to tell Spring to look for the `@FeignClient` annotation and automatically create an implementation for it. That is done by enabling Feign on the Spring application.
 
 Open `com/redhat/coolstore/CatalogServiceApplication.java` and add the class-level `@EnableFeignClients` annotation 
 to it.
@@ -110,7 +113,8 @@ to it.
 
 ### Testing the Inventory REST Client
 
-Before we put the client in use, let's create a unit test for it. However, to test REST calls we need to be able to mock the actual call. For that we will use a test framework called `Howeverfly`. Let's add the dependency for `Hoverfly` and `AssertJ` to the `pom.xml`, preferably below `<!-- Testing -->`
+Before we put the client in use, let's create a unit test for it. However, to test REST calls we need to be able to mock (fake) the actual call. For that we will
+use a test framework called [Hoverfly](http://hoverfly.io){:target="_blank"}. Let's add the dependency for _Hoverfly_ and _AssertJ_ to the `pom.xml`, preferably below `<!-- Testing -->`
 
 ~~~xml
     <dependency>
@@ -148,7 +152,7 @@ Then, inject the `InventoryClient` which is the class to be tested.
     InventoryClient inventoryClient;
 ~~~
 
-Next, create a mockInventory that Hoverfly simulation can return.
+Next, create a mockInventory that Hoverfly can return.
 
 ~~~java
     private static Inventory mockInventory;
@@ -183,7 +187,7 @@ Finally, create the test itself
 ~~~
 
 After running **Assistant** > **Organize Imports**, add the following static imports to 
-`InventoryClientTest` looks like:
+`InventoryClientTest`:
 
 ~~~java
 import static io.specto.hoverfly.junit.core.SimulationSource.dsl;
@@ -194,13 +198,16 @@ import static io.specto.hoverfly.junit.dsl.matchers.HoverflyMatchers.startsWith;
 import static org.assertj.core.api.Assertions.assertThat;
 ~~~
 
-Take a while and study the test class and notice that we inject a inventory client and then use that in the test to verify that we get a correct response. But how can we test a remote call in a unit test without actually having a service to call? That is where [Hoverfly](http://hoverfly.io){:target="_blank"} comes into play. Hoverfly can simulate API services by registering as a proxy to any outgoing traffic. In the `@ClassRule` we can defines how Hoverfly should respond to different calls.
+Take a while and study the test class and notice that we inject an inventory client and then use that in the test to verify
+that we get a correct response. But how can we test a remote call in a unit test without actually having a service to call?
+That is where [Hoverfly](http://hoverfly.io){:target="_blank"} comes into play. Hoverfly can simulate API services by registering
+as a proxy to any outgoing traffic. In the `@ClassRule` we can defines how Hoverfly should respond to different calls.
 
-So how does the Feign client know which URL to call? We will discuss the mechanics of service discovery later, but for now we can set a property called `ribbon.listOfServers`.
+So how does the Feign client know which URL to call? We will discuss the mechanics of service discovery later, but for now we
+can set a property in our Spring configuration file called `ribbon.listOfServers`.
 
-For the unit tests configurations we are going to provide the settings via a test application properties files. Create 
+For the unit test configuration we are going to provide the settings via a test property file. Create
 a file called `application-default.properties` in `src/test/resources` with the following content:
-this file with the following content:
 
 ~~~shell
 ribbon.listOfServers=mock-service.example.com:8080
@@ -212,8 +219,8 @@ We are now finally ready to run the test.
 
 ### Connecting the Catalog Service with Inventory
 
-Since we now have a working inventory client we are now ready to extend the Catalog endpoint 
-use it so that we can provide additional input.
+Since we now have a working inventory client we are ready to extend the Catalog endpoint to
+use it so that it fetches inventory values before returning the aggregated catalog response.
 
 Open `com/redhat/coolstore/service/ProductEndpoint.java`
 
@@ -252,7 +259,10 @@ Also, replace the implementation of the `readAll` method of the `ProductEndpoint
 
 ### Testing the Catalog REST API
 
-Wouldn't it be nice to also be able to test the endpoint, just like we tested the inventory client. Spring testing provides a nice templating feature where we can call services by injecting a `TestRestTemplate`. Spring will then take care for connecting that TestRestTemplate to the host and port that our application is started on during a unit test. Since the ProductEndpoint also uses the inventory client we need to simulate the inventory service as well. 
+Wouldn't it be nice to also be able to test the endpoint, just like we tested the inventory client?
+Spring testing provides a nice templating feature where we can call services by injecting a `TestRestTemplate`.
+Spring will then take care of connecting that `TestRestTemplate` to the host and port that our application is
+started on during a unit test. Since the ProductEndpoint also uses the inventory client we need to simulate the inventory service as well.
 
 Start by creating a class in `src/test/java/com/redhat/coolstore/service` called `ProductEndpointTest` with the following 
 code:
@@ -267,7 +277,7 @@ public class ProductEndpointTest {
 }
 ~~~
 
-Next, we will inject the `TestRestTemplate` as a class member variable like this
+Next, we will inject the `TestRestTemplate` as a class member variable like this:
 
 ~~~java
     @Autowired
@@ -322,7 +332,7 @@ Next, we define the Hoverfly rule like this:
     ));
 ~~~
 
-This takes care of all the setup and configuration of the tests. We can now implement our tests. Let's start with a test that will test retrieving a single product like this:
+This takes care of all the setup and configuration of the tests. We can now implement our tests. Let's start with a test that will retrieve a single product like this:
 
 ~~~java
     @Test
@@ -358,7 +368,8 @@ At this point we also create a test that check that the endpoint also returns a 
     }
 ~~~
 
-If you haven't already then it's time to organize our imports. However, since there is a lot of static method imports in this test class you can just past in the full list of imports from the below:
+If you haven't already done so, it's time to organize our imports. However, since there is a lot of static method imports in this test class you can
+just copy and paste in the full list of imports from the below:
 
 ~~~java
 import static io.specto.hoverfly.junit.core.SimulationSource.dsl;
@@ -416,9 +427,10 @@ If your test fails go back and check previous steps before moving to the next se
 
 ### Fallback Strategies
 
-Testing is good for many reason, but not only to verify our code. For example, what would happen if the inventory service didn't respond? Let's test that. 
+Testing is good for many reasons, not only to verify our code. For example, what would happen if the inventory service didn't respond? Let's test that.
 
-Open the `ProductEndpointTest` again and in the `@ClassRule` definition, lets introduce a server error bye un-comment the provided error response for calls to `/services/inventory/444436` (around line 70). Also comment out the successful response.
+Open the `ProductEndpointTest` again and in the `@ClassRule` definition, lets inject a server error by un-commenting the error response for calls
+to `/services/inventory/444436` (around line 70), and commenting out the successful response.
 
 The code should now look something like this:
 
@@ -441,13 +453,14 @@ Run the test again.
 [ERROR] Tests run: 5, Failures: 0, Errors: 1, Skipped: 0
 ~~~
 
-This time we can see that the `test_retrieving_one_product()` test ends with a nasty errors 
+This time we can see that the `test_retrieving_one_product()` test ends with ugly errors
 and if we look closer we can see that the call to our catalog service fails. The reason is 
 that the catalog service does a number of calls to `/services/inventory/{itemId}` and even 
 if 7 out of 8 calls where successful, one failure causes our catalog service 
 to fail as well. We need a fallback strategy!
 
-After discussing this with the UI team we have come to the conclusion that if a call to the inventory service fails the catalog service should return a `quantity` of `-1`. The UI will then detect this and display `undefined`.
+After discussing this with the UI team we have come to the conclusion that if a call to the inventory service fails the catalog service should return a `quantity` of `-1`.
+The UI will then detect this and display `undefined`.
 
 There are a number of ways of doing fall back using Feign, but at the core Feign 
 will throw a `FeignException` that we can catch and react to.
@@ -485,7 +498,7 @@ Open the `ProductEndpoint` class and update the `readOne` and `readAll` methods 
     }
 ~~~
 
-Now, run the tests again and verify that even if we return a server error for inventory item **444436** so will the application still give an acceptable response.
+Now, run the tests again and verify that even if we return a server error for inventory item **444436** the application still gives an acceptable response.
 
 ~~~shell
 [INFO] Results:
@@ -503,9 +516,14 @@ Now, run the tests again and verify that even if we return a server error for in
 
 ### Deploy the Application to OpenShift
 
-Before we deploy the a new version of the catalog service our application now depends on the inventory service available. We could use the product version of the inventory, but since that might affect performance of the production system. For that reason the inventory team has provided a mockup of the inventory service as a OpenShift template. The mock service behaves like the real service, but instead of actually calling the back-end system to retrieve the information, it returns a hard coded value of the inventory.
+Our new version of the catalog service now depends on the inventory service being available.
+We could use the inventory service that's deployed to production, but that might affect performance
+of the production system. For that reason the inventory team has provided a mockup of the inventory
+service as an OpenShift template. The mock service behaves like the real service, but instead of
+actually calling the back-end system to retrieve the information, it returns a hard coded values for the inventory.
+Let's deploy that and use it in our **dev** project.
 
-Go to the [OpenShift Web Console]({{ OPENSHIFT_MASTER_URL }}){:target="_blank"}:
+Go to the [OpenShift Web Console]({{ OPENSHIFT_MASTER_URL }}){:target="_blank"} and login if needed:
 
 * Username: `{{OPENSHIFT_USERNAME}}`
 * Password: `{{OPENSHIFT_PASSWORD}}`
@@ -514,29 +532,31 @@ Install the inventory-mockup into the **Catalog Dev** project. Click on the sear
 and enter `inventory`. Click on **inventory-mockup** and then **Next** and **Next** leaving the parameters 
 with their default values.
 
-|**CAUTION:** Replace GUID with the guid provided to you
-
 |**STEP BY STEP:** Create a mockup service
 |![New file]({% image_path service-to-service-mockup.gif %}){:width="640px"}
 
 |**NOTICE:** The inventory-mock template has already been installed in OpenShift since other teams are also depending using this mockup application.
 
-Remember that the Catalog service uses external configurations from a configmap? Well, it needs to have the same config that you did for the test so that it can find the Inventory service. This is however is already done via the templates you deployed. In order to verify, in the left-side menu click on **Resources** > **Config Maps** and then on **catalog**. 
+
+Remember that the Catalog service uses external configurations from a configmap? Well, it needs to have the same config that you did for the test
+so that it can find the Inventory service. This is however is already done via the templates you deployed. In order to verify, in the left-side
+menu click on **Resources** > **Config Maps** and then on **catalog**.
 
 ![Catalog ConfigMap]({% image_path service-to-service-configmap.png %}){:width="640px"}
 
-|**NOTICE:** We mentioned before that Feign has a number of different possibilities to use a service repository like Eureka, but when using OpenShift that is not necessary. OpenShift (and Kubernetes) has a concept of a [Service]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/pods_and_services.html#services){:target="_blank"} that provides built-in service discovery by automatically be load balanced between multiple instances of the same service with a fixed service name that doesn't change across environments. Later one we will also look at how Istio service mesh can provide more advanced routing and fail-over.
+|**NOTICE:** We mentioned before that Feign has a number of different possibilities to use a service repository like Eureka, but when using OpenShift that is not necessary. OpenShift (and Kubernetes) has a concept of a [Service]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/pods_and_services.html#services){:target="_blank"} that provides built-in service discovery by automatically load-balacing between multiple instances of the same service with a fixed service name that doesn't change  across environments. Later one we will look at how the Istio service mesh can provide more advanced routing and failover.
 
 Now, that everything is setup we are ready to deploy our new version of the application by commit and push the code changes we have done.
 
 |**STEP BY STEP:** Commit and push the changes
 |![New file]({% image_path service-to-service-commit.gif %}){:width="640px"}
 
-After pushing, the pipeline will automatically start (based on the hook we configured in lab 1). Let's go and look at the pipelines progress in the console.
+After pushing, the pipeline will automatically start (based on the hook we configured in lab 1). Check out the pipeline progress in the [`dev` project console]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"} (**Builds > Pipelines**).
 
 |**STEP BY STEP:** Commit and push the changes
 |![New file]({% image_path service-to-service-pipeline.gif %}){:width="640px"}
 
 ### Summary
 
-Congratulations, you have now successfully integrated our Catalog application with the inventory application using the Spring Cloud Feign Client. We are now ready to deploy the application to the Production environment, which we will look at in the next lab.
+Congratulations, you have now successfully integrated the Catalog application with the inventory service using the Spring Cloud Feign Client.
+We are now ready to deploy the application to the Production environment, which we will look at in the next lab.

@@ -3,23 +3,26 @@
 As a developer you have been tasked with creating a catalog service that exposes a REST API to 
 read from the product catalog database.
 
-The catalog service is part of the a microservices architectured application called CoolStore. 
+The catalog service is part of a microservices-based application called **CoolStore**.
 
 ![CoolStore Microservices]({% image_path create-catalog-coolstore.png %}){:width="900px"}
 
-After talking to the **web** team you have decided to create two endpoints. One that returns a list of all products as a JSON string and another one that based on product Id returns a single product.
+After talking to the **web** team you have decided to create two endpoints: One that returns a list of all products as a JSON
+string and another one that takes a product ID returns a single product.
 
-After the initial sprint planing the team has decided to use Spring Boot, Spring Data and PostgreSQL to implement this. However, since the team wants to be able to test and run this locally without having to install a database the you will also use H2 (an in-memory database) for local development.
+After the initial sprint planning the team has decided to use Spring Boot, Spring Data and PostgreSQL to implement this.
+However, since the team wants to be able to test and run this locally without having to install a database, you will
+use H2 (an in-memory database) for local development.
 
 ### Create the Domain Object Model
 
-The first step is to create a java class that represents the product data domain model with the following 
+The first step is to create a Java class that represents the product data domain model with the following
 fields:
 
-* **`ItemId`** - a string representing a unique id for the product
+* **`itemId`** - a string representing a unique ID for the product
 * **`name`** - a string between 1-255 characters that contains the name of the product
-* **`description`** - a string between 0-2500 characters that contains the a details description about the product.
-* **`price`** - a double value that represent the list price of a product.
+* **`description`** - a string between 0-2500 characters that contains the detailed description of the product.
+* **`price`** - a _double_ value that represent the list price of a product.
 
 The database table would look like this:
 
@@ -48,19 +51,19 @@ public class Product {
 }
 ~~~
 
-`@Entity` annotation marks the class as a data model for Spring Data. You can generate the getter and 
+The `@Entity` annotation marks the class as a data model for Spring Data. You can generate the getter and
 setter methods using Eclipse Che. Click on a spot where you want the 
-methods to be generated, write `get` or `set` and then press Ctrl+Space to get the list of proposals for 
+methods to be generated, write `get` or `set` into the editor and then press Ctrl+Space to get the list of proposals for
 the code to be generated. Click on `getName()` for example to generate the `getName()` method. Repeat for 
-all the getters and setters.
+all the getters and setters for each of the above fields.
 
 |**STEP BY STEP:** Creating the Domain Object Model
 |![Create a model]({% image_path che-create-model.gif %}){:width="900px"}
 
 ### Adding Seed Data
 
-To populate our database we will use a auto import feature of Spring that will pre-populate 
-our database with content. We do that by creating a file called `import.sql` under `src/main/resources` with the following content, 
+To populate our database we will use the auto import feature of Spring that will pre-populate
+our database with content. To do this, create a file called `import.sql` under `src/main/resources` with the following content,
 which is automatically imported when the application starts:
 
 ~~~sql
@@ -76,7 +79,7 @@ insert into product (item_id, name, description, price) values ('444436', 'Lytro
 
 ### Create a Repository to Access Data
 
-You can use Spring Data repository abstraction which is a convenient way to access data 
+You can use the Spring Data repository abstraction which is a convenient way to access data
 models in Spring applications without writing much code.
 
 Create a repository interface called `ProductRepository` in 
@@ -100,7 +103,9 @@ You have now created a domain model and a repository for our Catalog Service.
 
 ### Test the Product Repository
 
-After creating domain model and a repository for our Catalog Service you realize that it would probably be smart to also write some test code that can verify that the implementation works as expected.
+After creating domain model and a repository for our Catalog Service you realize that it would probably be smart to also
+ write some test code that can verify that the implementation works as expected.
+
 
 Create a unit test called `ProductRepositoryTest` under `src/test/java` folder and in the `com.redhat.coolstore.service` 
 package with the following code:
@@ -122,7 +127,10 @@ test class:
 ~~~
 
 You will get an error notice near the annotation which tells you the annotation should be imported in order to be used in 
-your Java class. Fortunately Eclipse Che can fix that for you automatically. Right-click on the annotation (or the error) and 
+your Java class. Fortunately Eclipse Che can fix that for you automatically (you *did* mark the project as a Maven project when you
+first imported it into Eclipse Che, right?)
+
+Right-click on the annotation (or the error) and
 then choose **Quick Fix**. Eclipse Che will show you a list of quick fixes, click on **Import 'RunWith'...** to import it to your 
 Java class. 
 
@@ -137,7 +145,7 @@ Inject an instance of `ProductRepository` which is the class under test:
 ~~~
 
 Now you are ready to write the first test. First you can test the `findOne` method by collecting one of 
-the product that you defined in `import.sql` and verify that the data is correct:
+the products that you defined in `import.sql` and verifying that the data is correct:
 
 ~~~java
     @Test
@@ -163,8 +171,8 @@ Add another test for the `findAll` method:
 ~~~
 
 At this point you should have a lot of errors because you might not have imported any classes.  Click on 
-**Assistant > Organize Imports** in the top bar menu. Organize import will however not import static methods 
-so add the static import for `assertThat` method like this to the top of the test class near the other imports:
+**Assistant > Organize Imports** in the top bar menu. _Organize imports_ will not import static methods
+so add the static import for `assertThat` method to the top of the test class near the other imports:
 
 ~~~java
 import static org.assertj.core.api.Assertions.assertThat;
@@ -182,8 +190,8 @@ Verify that the tests are passing green.
 
 ### Creating a Product Endpoint
 
-Since it's now verified that products can successfully fetched from the database, you are ready to create a REST endpoint 
-that returns the products data as a JSON response..
+Now that you've verified you can successfully fetch products from the database, you are ready to create a REST endpoint
+that returns the products data as a JSON response.
 
 Create a class called `ProductEndpoint` in `src/main/java/com/redhat/coolstore/service` with 
 the following code:
@@ -244,10 +252,10 @@ but we will save that for a bit later. Instead we are going to run the applicati
 using the **Commands Palette** in Eclipse Che. Click on the **Commands Palette** and then on **RUN > run**
 
 When the **run** output panel reports `Started CatalogServiceApplication` click 
-on the link next to **Preview:** to open a preview browser to the application.
+on the link next to **Preview:** at the top of the output panel to open a preview in your browser to the application.
 
-Don't worry if you see a **Application Not Available** page. Just reload the 
-page using using F5 (or CTRL+R or CMD+R if on mac).
+Don't worry if you see a **Application Not Available** page, it make take a few seconds to fully spin up. Just reload the
+page using using F5 (or CTRL+R or CMD+R if on mac) until you see the catalog.
 
 ![Application Not Available]({% image_path create-catalog-application-not-available.png %}){:width="600px"}
 
@@ -258,24 +266,24 @@ You should now see a page that list the content of the product catalog like this
 |**NOTE:** This command will run `mvn spring-boot:run`, but is similar to 
 running `java -jar target/<app>.jar` directly from a terminal window.
 
-|**NOTE:** The Preview URL is unique and will be different from the screenshot above
+|**NOTE:** The Preview URL is unique and will be different from the screenshot above!
 
 |**STEP BY STEP:** Run the application locally 
 |![Step by step - run locally]({% image_path create-catalog-step-by-step-run.gif %}){:width="640px"}
 
 |**INFO:** Even if you application is actually running in Eclipse Che on OpenShift 
-we are actually not running a proper OpenShift managed application yet. This development 
-flow is similar as if you where developing locally on you developer machine and testing 
+it is not running as a proper OpenShift-managed application yet. This development
+flow allows you to develop "locally" on your developer machine and test
 locally before deploying to "real" server. This is a great way for you as a developer 
 to test your own code changes before committing and pushing it to a shared repository.
 
-|**NOTE:** The current version of the application does not provide a inventory quantity number. We will look at that in the next section.
+|**NOTE:** The current version of the application does not provide an inventory _quantity_ number. We will look at that in the next section.
 
 Stop the local test run of Catalog by clicking on the stop icon near **run** in Eclipse Che.
 
 ### Push the Changes to Git Repository
 
-Commit all the changes and push all the changes by selecting **Git > Commit** from the menu.
+Commit and push all the changes by selecting **Git > Commit** from the menu.
 
 ![Git Commit]({% image_path create-catalog-commit-1.png %}){:width="200px"}
 
@@ -289,13 +297,17 @@ Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}/console/project/dev{{P
 
 When the pipeline is completed, point your browser to the [Catalog url deployed on OpenShift](http://catalog-dev{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"} to access it.
 
-Note that you can find the Catalog url also in the project overview in the OpenShift Web Console.
+Note that you can also find the Catalog url in the project overview in the OpenShift Web Console.
 
 |**STEP BY STEP:** Commit the changes and run the pipeline
 |![Step by step - Commit the changes and run the pipeline]({% image_path create-catalog-step-by-step-pipeline.gif %}){:width="640px"}
 
-|**NOTE:** The current version of the application does not make use of the PostgreSQL server which is deployed in the **Catalog DEV** project. Instead it currently uses the H2 database. You will fix that in the next lab.
+|**NOTE:** The current version of the application does not make use of the PostgreSQL server which is deployed in the **Catalog DEV** project.
+Instead it currently uses the H2 database. You will fix that in the next lab.
 
 ### Summary
 
-Congratulations, you have managed to create the first version of our microservices. Pat yourself on the back and reflect a bit on how easy it was to do this using this integrated development environment and how easy it was to deploy it to OpenShift. In the next module we will look at how to do a service-to-service call.
+Congratulations, you now created the first version of your microservice. Pat yourself on the back and reflect a bit on how easy it was to do
+this using this integrated development environment and how easy it was to deploy it to OpenShift. In the next module we will look at how
+to externalize the database configuration and in the following lab you'll do a service-to-service call to link the `catalog` with the `inventory` to produce
+an aggregated result. On to the next lab!

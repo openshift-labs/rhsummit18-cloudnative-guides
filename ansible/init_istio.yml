@@ -105,7 +105,7 @@
 - name: add jaeger tracing to the catalog in prod
   shell: |
     {{ openshift_cli }} env -n prod{{ project_suffix }} dc/catalog JAEGER_SERVICE_NAME=catalog \
-          JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14267/api/traces \
+          JAEGER_ENDPOINT=https://jaeger-collector.istio-system.svc:14267/api/traces \
           JAEGER_PROPAGATION=b3 \
           JAEGER_SAMPLER_TYPE=const \
           JAEGER_SAMPLER_PARAM=1

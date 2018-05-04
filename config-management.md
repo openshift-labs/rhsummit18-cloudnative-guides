@@ -27,7 +27,7 @@ catalog-postgresql-1-c4rsm   1/1       Running   0          41m
 ~~~
 
 Our Spring Boot Catalog application configuration is provided via a properties filed called `application-default.properties`
-and can be overriden and [overlayed via multiple mechanisms](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html){:target="_blank"}.
+and can be overridden and [overlayed via multiple mechanisms](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html){:target="_blank"}.
 
 In this scenario, you will configure the Catalog service which is based on Spring Boot to override the default
 H2 database configuration using alternative configuration values backed by an [OpenShift ConfigMap]({{ OPENSHIFT_DOCS_BASE }}/dev_guide/configmaps.html){:target="_blank"}.
@@ -36,7 +36,8 @@ The ConfigMap object in OpenShift and Kubernetes provides mechanisms to inject c
 data while keeping containers agnostic of OpenShift and Kubernetes. A ConfigMap can be used to store fine-grained 
 information like individual properties or coarse-grained information like entire configuration files or JSON blobs.
 
-A ConfigMap has been created for you already, which supplies the necessary PostgreSQL configuration to be
+A ConfigMap has been created for you already as part of the template you used to initialize your developer project
+which supplies the necessary PostgreSQL configuration to be
 able to connect to the PostgreSQL database. Run the following in Eclipse Che **Terminal**:
 
 ~~~shell
@@ -68,7 +69,7 @@ Events:  <none>
 
 The username and password was generated when you first deployed the catalog template, and the ConfigMap shown
 above was also created at that time. This ConfigMap consists of one config item, as you can see above, which is 
-a file called `application.properties` which the content the follows it after `----`.
+a file called `application.properties` which contains as its value the contents below the `----`.
 
 ### Use ConfigMap with Spring Boot
 
@@ -90,7 +91,7 @@ Although Spring Cloud Kubernetes tries to discover ConfigMaps, due to security r
 by default are not allowed to snoop around OpenShift clusters and discover objects. Security comes first,
 and discovery is a privilege that needs to be granted to containers in each project.
 
-Since you do want Spring Boot to discover the ConfigMaps inside the **dev** project, you
+Since you _do_ want Spring Boot to discover the ConfigMaps inside the **dev** project, you
 need to grant permission to the Spring Boot [service account]({{OPENSHIFT_DOCS_BASE}}/dev_guide/service_accounts.html){:target="_blank"} to access the OpenShift REST API and find the
 ConfigMaps. To grant this permission, run the following in Eclipse Che **Terminal**:
 
@@ -133,7 +134,7 @@ the **Push commit changes to...** and then click on **Commit**
 
 This will trigger the pipeline build.
 
-Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}){:target="_blank"} and click on **Builds** > **Pipelines** to watch the pipeline build and deploy the updated catalog code:
+Open the [`dev` project console]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"} and click on **Builds** > **Pipelines** to watch the pipeline build and deploy the updated catalog code:
 
 ![Build Pipeline]({% image_path config-catalog-pipeline.png %}){:width="700px"}
 

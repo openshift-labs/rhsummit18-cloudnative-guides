@@ -46,7 +46,7 @@ We also need to extend the `Product` model to contain the quantity information. 
     private int quantity;
 ~~~
 
-Note the `@Transient` annotation which shows that this field should not be persisted in the product table 
+Note the `javax.persistence.Transient` annotation which shows that this field should not be persisted in the product table 
 and it's rather coming from somewhere else (the inventory table!).
 
 |**STEP BY STEP:** Creating the inventory model
@@ -87,7 +87,23 @@ some meta data about the request to the inventory service using annotations like
     Inventory getInventoryStatus(@PathVariable("itemId") String itemId);
 ~~~
 
-Finally, we also have to tell Spring to look for the `@FeginClient` annotation and automatically create an implementation for it. This is done by adding the `@EnableFeignClients` annotation to `src/main/java/com/redhat/coolstore/CatalogServiceApplication.java`
+Just to make sure you have the correct imports, here is how they should look like after 
+running **Assistant** > **Organize Imports**.
+
+~~~java
+import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.redhat.coolstore.model.Inventory;
+~~~
+
+Finally, we also have to tell Spring to look for the `@FeginClient` annotation and automatically create an implementation for it. That is done by enabling Feigh on the Spring application.
+
+Open `com/redhat/coolstore/CatalogServiceApplication.java` and add the class-level `@EnableFeignClients` annotation 
+to it.
 
 |**STEP BY STEP:** Creating the client
 |![New file]({% image_path service-to-service-client.gif %}){:width="900px"}
@@ -125,7 +141,7 @@ public class InventoryClientTest {
 }
 ~~~
 
-Then, inject the `InventoryClient`
+Then, inject the `InventoryClient` which is the class to be tested.
 
 ~~~java
     @Autowired
@@ -182,10 +198,11 @@ Take a while and study the test class and notice that we inject a inventory clie
 
 So how does the Feign client know which URL to call? We will discuss the mechanics of service discovery later, but for now we can set a property called `ribbon.listOfServers`.
 
-For the unit tests we are going to provide the settings in `src/test/resources/application-default.properties`. Create 
+For the unit tests configurations we are going to provide the settings via a test application properties files. Create 
+a file called `application-default.properties` in `src/test/resources` with the following content:
 this file with the following content:
 
-~~~
+~~~shell
 ribbon.listOfServers=mock-service.example.com:8080
 ~~~
 
@@ -195,9 +212,10 @@ We are now finally ready to run the test.
 
 ### Connecting the Catalog Service with Inventory
 
-Since we now have a working inventory client we are now ready to extend the Catalog endpoint use it so that we can provide additional input.
+Since we now have a working inventory client we are now ready to extend the Catalog endpoint 
+use it so that we can provide additional input.
 
-Open `src/main/java/com/redhat/coolstore/service/ProductEndpoint.java`
+Open `com/redhat/coolstore/service/ProductEndpoint.java`
 
 Add an injection of an `InventoryClient` like this:
 
@@ -213,12 +231,8 @@ Next, replace the implementation of the `readOne` method of the `ProductEndpoint
     @GetMapping("/product/{id}")
     public ResponseEntity<Product> readOne(@PathVariable("id") String id) {
         Product product = productRepository.findOne(id);
-        try {
-          Inventory inventory = inventoryClient.getInventoryStatus(id);
-          product.setQuantity(inventory.getQuantity());
-        } catch (feign.FeignException e) {
-          product.setQuantity(-1);
-        }
+        Inventory inventory = inventoryClient.getInventoryStatus(id);
+        product.setQuantity(inventory.getQuantity());
         return new ResponseEntity<Product>(product,HttpStatus.OK);
     }
 ~~~
@@ -231,14 +245,7 @@ Also, replace the implementation of the `readAll` method of the `ProductEndpoint
     public ResponseEntity<List<Product>> readAll() {
         Spliterator<Product> iterator = productRepository.findAll().spliterator();
         List<Product> products = StreamSupport.stream(iterator, false).collect(Collectors.toList());
-        products.stream()
-                .forEach(p -> {
-                    try {
-                        p.setQuantity(inventoryClient.getInventoryStatus(p.getItemId()).getQuantity());
-                    } catch (feign.FeignException e) {
-                        p.setQuantity(-1);
-                    }
-                });
+        products.stream().forEach(p -> p.setQuantity(inventoryClient.getInventoryStatus(p.getItemId()).getQuantity()));
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 ~~~
@@ -393,6 +400,16 @@ Then double click on the **test** command.
 
 If your test fails go back and check previous steps before moving to the next section.
 
+~~~shell
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+ ...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+~~~
+
 |**STEP BY STEP:** Creating tests for the endpoint
 
 |![New file]({% image_path service-to-service-endpoint-test.gif %}){:width="900px"}
@@ -421,14 +438,18 @@ Run the test again.
 [ERROR] Failures: 
 [ERROR]   ProductEndpointTest.test_retrieving_one_product:84 expected:<[98]> but was:<[0]>
 [INFO] 
-[ERROR] Tests run: 6, Failures: 1, Errors: 0, Skipped: 0
+[ERROR] Tests run: 5, Failures: 0, Errors: 1, Skipped: 0
 [INFO] 
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
 ~~~
 
-This time we can see that the test ends with a nasty errors and if we look closer we can see that the call to our catalog service fails. The reason is that the catalog service does a number of calls to `/services/inventory/{itemId}` and even if 7 out of 8 calls where successful, one failure causes our catalog service to fail as well. We need a fallback strategy!
+This time we can see that the `test_retrieving_one_product()` test ends with a nasty errors 
+and if we look closer we can see that the call to our catalog service fails. The reason is 
+that the catalog service does a number of calls to `/services/inventory/{itemId}` and even 
+if 7 out of 8 calls where successful, one failure causes our catalog service 
+to fail as well. We need a fallback strategy!
 
 After discussing this with the UI team we have come to the conclusion that if a call to the inventory service fails the catalog service should return a `quantity` of `-1`. The UI will then detect this and display `undefined`.
 
@@ -441,27 +462,28 @@ Open the `ProductEndpoint` class and update the `readOne` and `readAll` methods 
     @ResponseBody
     @GetMapping("/products")
     public ResponseEntity<List<Product>> readAll() {
-        List<Product> productList = productRepository.readAll();
-        productList.stream()
+        Spliterator<Product> iterator = productRepository.findAll().spliterator();
+        List<Product> products = StreamSupport.stream(iterator, false).collect(Collectors.toList());
+        products.stream()
                 .forEach(p -> {
                     try {
-                        p.quantity = inventoryClient.getInventoryStatus(p.itemId).quantity;
+                        p.setQuantity(inventoryClient.getInventoryStatus(p.getItemId()).getQuantity());
                     } catch (feign.FeignException e) {
-                        p.quantity = -1;
+                        p.setQuantity(-1);
                     }
                 });
-        return new ResponseEntity<List<Product>>(productList,HttpStatus.OK);
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
-
+    
     @ResponseBody
     @GetMapping("/product/{id}")
     public ResponseEntity<Product> readOne(@PathVariable("id") String id) {
-        Product product = productRepository.findById(id);
+        Product product = productRepository.findOne(id);
         try {
             Inventory inventory = inventoryClient.getInventoryStatus(id);
-            product.quantity = inventory.quantity;
+            product.setQuantity(inventory.getQuantity());
         } catch (feign.FeignException e) {
-            product.quantity = -1;
+            product.setQuantity(-1);
         }
         return new ResponseEntity<Product>(product,HttpStatus.OK);
     }
@@ -472,7 +494,7 @@ Now, run the tests again and verify that even if we return a server error for in
 ~~~shell
 [INFO] Results:
 [INFO] 
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 [INFO] 
 ...
 [INFO] ------------------------------------------------------------------------

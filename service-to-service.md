@@ -9,7 +9,7 @@ The UI team has asked us to include inventory information in the responses when 
 By calling the inventory service in production like this:
 
 ~~~shell
-curl http://inventory-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/inventory/444434
+curl -w '\n' http://inventory-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/inventory/444434
 ~~~
 
 We can see that the response from the curl command looks like this:

@@ -2,26 +2,26 @@
 {:.no_toc}
 
 In this lab you will configure you local development environment using Eclipse Che IDE and create 
-a build pipeline that build, tests and deploys a Spring Boot service on OpenShift.
+a build pipeline that builds, tests and deploys a Spring Boot service on OpenShift.
 
 #### Configure Development Workspace in Eclipse Che
 
-You might be familiar with the Eclipse IDE which has been for years, one of the popoular IDEs for Java and other 
+You might be familiar with the Eclipse IDE which is one of the most popoular IDEs for Java and other
 programming languages. [Eclipse Che](https://www.eclipse.org/che/){:target="_blank"} is the next-generation Eclipse IDE which is web-based
-and gives you a full-features IDE running in the cloud. You have an Eclipse Che instance deployed on your OpenShift cluster 
+and gives you a full-featured IDE running in the cloud. You have an Eclipse Che instance deployed on your OpenShift cluster
 which you will use during these labs.
 
 Go to the [Eclipse Che url]({{ ECLIPSE_CHE_URL }}){:target="_blank"} in order to configuration your development workspace.
 
-A stack is a template of workspace configuration for example the programming language and tools you want to use
-in your workspace. Stacks make it possible to recreate identical workspaces with all the tools and configurations 
+A stack is a template of workspace configuration. For example, it includes the programming language and tools needed
+in your workspace. Stacks make it possible to recreate identical workspaces with all the tools and needed configuration
 on-demand. 
 
 For this lab, click on the **Java RH Summit** stack and then on the **Create** button. 
 
 ![Eclipse Che Workspace]({% image_path bootstrap-che-create-workspace.png %}){:width="900px"}
 
-Click on **Open** to open the workspace and then on **Start** button to start the workspace for use.
+Click on **Open** to open the workspace and then on the **Start** button to start the workspace for use.
 
 ![Eclipse Che Workspace]({% image_path bootstrap-che-start-workspace.png %}){:width="900px"}
 
@@ -35,7 +35,7 @@ Eclipse Che IDE running in your browser.
 ![Eclipse Che Workspace]({% image_path bootstrap-che-workspace.png %}){:width="900px"}
 
 Now you can import the Catalog project skeleton from the git repository directly into your workspace and start 
-coding on it. 
+working on it.
 
 You should first set the Git name and email so that it marks your commits with your name in the 
 source code version history. Go to **Profile** > **Preferences** > **Git** > **Committer**, enter 
@@ -44,14 +44,14 @@ your name and email and click on **Save**
 ![Eclipse Che - Git Config]({% image_path bootstrap-che-git-profile.png %}){:width="600px"}
 
 The source code for the Catalog service is available in the git server running on OpenShift. In the project 
-explorer pane, click on **Import Projects...** link and enter the Catalog git repository url:
+explorer pane, click on the **Import Projects...** link and enter the Catalog git repository url:
 
 |`http://{{GIT_USERNAME}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`{: style="color: blue"}
 
 ![Eclipse Che - Import Project]({% image_path bootstrap-che-import.png %}){:width="720px"}
 
 Click on **Import**. Make sure you choose the **Java** > **Maven** project configuration so that 
-the Maven features get enabled for your project. Click on **Save**
+the Maven features get enabled for your project, such as automatic dependency validation. Click on **Save**
 
 ![Eclipse Che - Import Maven]({% image_path bootstrap-che-maven.png %}){:width="720px"}
 
@@ -59,7 +59,7 @@ The catalog project is imported now into your workspace and is visible in the pr
 
 ![Eclipse Che - Project]({% image_path bootstrap-che-project.png %}){:width="900px"}
 
-Build the Catalog project by clicking on the maven commands pallette if you can find the toolbar icon or alternatively
+Build the Catalog project by clicking on the maven commands pallette if you can find the toolbar icon, or alternatively
 click on **Run** > **Commands Palette** > **Build** (there are more ways to do this, see if you can find them!)
 
 ![Eclipse Che - Project]({% image_path bootstrap-che-build-palette.png %}){:width="600px"}
@@ -74,7 +74,7 @@ The build will succeed and you would see something like the following in the bui
 
 #### Create Dev Environment
 
-You will use OpenShift CLI and OpenShift Web Console for interacting with OpenShift during these labs. Open the
+You will use the OpenShift CLI and the OpenShift Web Console for interacting with OpenShift during these labs. Open the
 [OpenShift Web Console]({{ OPENSHIFT_MASTER_URL }}){:target="_blank"}.
 
 Login with the following credentials:
@@ -82,8 +82,8 @@ Login with the following credentials:
 * Username: ``{{ OPENSHIFT_USERNAME }}``
 * Password: ``{{ OPENSHIFT_PASSWORD }}``
 
-You can also use the Eclipse Che **Terminal** panel to run OpenShift CLI commands that is what you will
-use in the following labs whenever it's instructed to run an OpenShift CLI command.
+You can also use the Eclipse Che **Terminal** panel to run OpenShift CLI commands. Use that in
+the following labs whenever it's instructed to run an OpenShift CLI command.
 
 Use the OpenShift CLI to login into OpenShift with the the same credentials:
 
@@ -105,9 +105,9 @@ access it [here]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}
 
 #### Deploy Catalog in DEV Environment
 
-OpenShift [Source-to-Image (S2I)]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/builds_and_image_streams.html#source-build){:target="_blank"}
+OpenShift's [Source-to-Image (S2I)]({{OPENSHIFT_DOCS_BASE}}/architecture/core_concepts/builds_and_image_streams.html#source-build){:target="_blank"}
 capability can be used to build a container image from the source code. OpenShift S2I uses the supported 
-OpenJDK container image to build the final container image of the Catalog service using the Spring Boot uber-jar laid over the 
+OpenJDK container image to build the final container image of the Catalog service using the Spring Boot _uber-jar_ laid over the
 certified OpenJDK container image that comes with the OpenShift platform.
 
 Run the following in Eclipse Che **Terminal** in order to build the Catalog container image using S2I:
@@ -120,7 +120,7 @@ oc new-build redhat-openjdk18-openshift:1.2~http://{{GIT_HOSTNAME}}/{{GIT_USERNA
 The `[BASE IMAGE]~[SOURCE REPO]` expression in the above command instructs OpenShift to pull the
 application source code from the specified source code repository `[SOURCE_REPO]`, build it using the build tool that
 is suitable for the application (nothing says Maven louder than a `pom.xml`!), and then build the container 
-image for the application by layering the application binaries on the `[BASE IMAGE]`. Since Catalog service
+image for the application by layering the application binaries onto the `[BASE IMAGE]`. Since the Catalog service
 is based on Spring Boot, we use the certified OpenJDK image that is available in OpenShift 
 a.k.a. `redhat-openjdk18-openshift:1.2`.
 
@@ -134,7 +134,7 @@ clicking on the build.
 ![Catalog Build]({% image_path bootstrap-catalog-build.png %}){:width="900px"}
 
 [OpenShift Templates]({{OPENSHIFT_DOCS_BASE}}/dev_guide/templates.html){:target="_blank"} allow composing applications
-from multiple containers and deploy them at once. The Catalog service needs a PostgreSQL database and 
+from multiple containers and deploying them at once. The Catalog service needs a PostgreSQL database and
 therefore you can use a template that is already created to deploy the Catalog skeleton project and 
 a PostgreSQL database on OpenShift.
 
@@ -168,7 +168,7 @@ In the next labs, you will write some code to build a few REST endpoints in the 
 
 #### Continuous Integration Pipeline
 
-In order to automate the build and test process every time someone changes source code of the Catalog 
+In order to automate the build and test process every time someone changes the source code of the Catalog
 service, create a CI pipeline on Jenkins which checks the code on every commit and builds and tests it. 
 The CI pipeline enables fast feedback to developers and makes sure everyone knows and can react if someone 
 breaks the code.
@@ -250,7 +250,7 @@ development environment:
 * _Build Image_: build a container image using the Catalog service JAR file
 * _Deploy_: deploy the new Catalog container image into **Catalog DEV** environment
 
-Commit the `Jenkinsfile` in to the git repository by right-clicking on the catalog in the project 
+Commit the `Jenkinsfile` into the git repository by right-clicking on the catalog in the project
 explorer and then on **Git** > **Commit**.
 
 Make sure `Jenkinsfile` is checked. Enter a commit message to describe your change. Check the 
@@ -258,7 +258,7 @@ Make sure `Jenkinsfile` is checked. Enter a commit message to describe your chan
 
 ![Eclipse Che - Git Commit]({% image_path bootstrap-che-git-commit.png %}){:width="600px"}
 
-Go to Eclipse Che **Terminal** and run the following to deploy a Jenkins container using the certified Jenkins image that 
+Go to the clipse Che **Terminal** and run the following to deploy a Jenkins container using the certified Jenkins image that
 comes with OpenShift.
 
 ~~~shell
@@ -268,7 +268,8 @@ oc new-app jenkins-persistent
 ![Deploy Jenkins]({% image_path bootstrap-jenkins-deploy.png %}){:width="900px"}
 
 OpenShift has built-in support for built and deployment automation through 
-[the automatic deployment triggers]({{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers){:target="_blank"}. Whenever configuration of the image changes or a new image is available for the 
+[the automatic deployment triggers]({{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers){:target="_blank"}.
+Whenever configuration of the image changes or a new image is available for the
 application, then OpenShift would automatically redeploy the image. Since in this lab you want to 
 control the build and deployment flow via a deployment pipeline, disable the automatic trigger:
 
@@ -344,7 +345,7 @@ you copied into the **Payload URL** textbox and then click on **Add Webhook**.
 
 ![Add Webhook]({% image_path bootstrap-webhook.png %}){:width="600px"}
 
-The webhook is added now and will trigger the pipeline to run on every push to the **catalog** git 
+The webhook is now added and will trigger the pipeline to run on every push to the **catalog** git
 repository.
 
 You can test the webhook by clicking on the webhook and then on **Test Delivery** button.

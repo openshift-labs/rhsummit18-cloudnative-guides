@@ -174,7 +174,7 @@ itemid of `444436`:
 
 ~~~sh
 oc rsh dc/catalog-postgresql /bin/bash -c \
-  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"update catalog set price=100.0 where itemid='444436'\""
+  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"update product set price=100.0 where item_id='444436'\""
 ~~~
 
 You will see a returned message of `UPDATE 1` indicating that the price was updated in Postgres. Let's re-fetch the catalog
@@ -182,7 +182,7 @@ and verify the new price:
 
 ~~~sh
 oc rsh dc/catalog-postgresql /bin/bash -c \
-  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"select itemId, name, price from catalog\""
+  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"select item_id, name, price from product\""
 ~~~
 
 The _Lytro Camera_ product should now cost `100`:

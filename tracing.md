@@ -141,27 +141,40 @@ to promote the build to production environment.
 
 ### Verify the Changes in Production
 
-When the release pipeline is done execute the following command in the Eclipse Che **Terminal** a couple of times.
+When the **catalog-release** pipeline is done, execute the following command in the Eclipse Che **Terminal** a couple of times.
 
 ~~~shell
 curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
-Check that the response time is now 400-500ms.
+Check that the response time is now ~400-500ms.
 
 |**NOTE:** The first call after the deployment may take a bit longer
+
+You can also verify that by opening the 
+[Jaeger Query Console](http://jaeger-query-istio-system.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"} and specify the following query:
+
+|Property|Value|
+|--------|--------|
+|Service |catalog |
+|Operation|default-route|
+
+Click on **Find Traces** and you should see some result for traces to service catalog where the calls take ~400-500ms
+
+![Jaeger query]({% image_path tracing-response-improved.png %}){:width="900px"}
 
 Also verify that the web application is now behaving better by [opening it in the browser](http://web-ui-prod.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"}.
 
 Before we move on please remove the service delay we added in the begining, by running the following command:
 
 ~~~shell
-oc env -n prod{{PROJECT_SUFFIX}} dc/inventory SERVICE_DELAY=0 --overwrite=true && oc rollout status dc/inventory -n prod{{PROJECT_SUFFIX}}
+oc env -n prod{{PROJECT_SUFFIX}} dc/inventory SERVICE_DELAY=0 --overwrite=true
+oc rollout status dc/inventory -n prod{{PROJECT_SUFFIX}}
 ~~~
 
 ## Summary
 
-[Jaeger](https://www.jaegertracing.io){:target="_blank"}, which is part of the developer preview of Istio for OpenShift is a great tool to see how calls are propagated between services. It does that by correlating trace id's that are passed as headers. Spring Boot and most of the other runtimes in RHOAR includes client libraries for OpenTracing, and together with Istio side-car proxies they make it possible to trace calls without changing the code of your application. After we have identified the problem updating the application was really easy, and because of our pipelines we could within minutes push the fix all the way to production.
+[Jaeger](https://www.jaegertracing.io){:target="_blank"}, which is part of the developer preview of Istio for OpenShift is a great tool to see how calls are propagated between services. It does that by correlating trace id's that are passed as headers. Spring Boot and most of the other runtimes in [Red Hat OpenShift Application Runtimes](https://www.redhat.com/en/technologies/cloud-computing/openshift/application-runtimes){:target="_blank"} includes client libraries for OpenTracing, and together with Istio side-car proxies they make it possible to trace calls without changing the code of your application. After we have identified the problem updating the application was really easy, and because of our pipelines we could within minutes push the fix all the way to production.
 
 
 

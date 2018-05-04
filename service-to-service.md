@@ -435,14 +435,10 @@ Run the test again.
 ~~~shell
 [INFO] Results:
 [INFO] 
-[ERROR] Failures: 
-[ERROR]   ProductEndpointTest.test_retrieving_one_product:84 expected:<[98]> but was:<[0]>
+[ERROR] Errors: 
+[ERROR]   ProductEndpointTest.check_that_endpoint_returns_a_correct_list:92 » HttpMessageNotReadable
 [INFO] 
 [ERROR] Tests run: 5, Failures: 0, Errors: 1, Skipped: 0
-[INFO] 
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
 ~~~
 
 This time we can see that the `test_retrieving_one_product()` test ends with a nasty errors 

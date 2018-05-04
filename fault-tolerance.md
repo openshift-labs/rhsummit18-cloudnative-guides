@@ -1,4 +1,4 @@
-## The challenge with distributed computing
+## The Challenge With Distributed Computing
 
 As we transition our applications towards a distributed architecture with microservices deployed across a distributed
 network, Many new challenges await us.
@@ -23,7 +23,7 @@ Today, developers are responsible for taking into account these challenges, and 
 Another challenge is each runtime and language addresses these with different libraries and frameworks, and in
 some cases there may be no implementation of a particular library for your chosen language or runtime.
 
-## Improving the `inventory` service
+## Improving the Inventory Service
 
 In this scenario we'll explore how to use a new project called _Istio_ to solve many of the challenges of modern
 distributed applications. In particular, our coolstore application suffers from problems when the load is high - although
@@ -33,7 +33,7 @@ from occasional scaling problems when the load is high. Let's use Istio and its 
 features to gracefully handle the high load. Notice that we aren't making **any changes to the application itself**,
 letting Istio handle failures at a lower, application infrastructure level.
 
-### Introduce bad behavior
+### Chaos Engineering with the Inventory Service
 
 In the **CoolStore PROD** project, let's scale up the `inventory` service to 2 pods since we want to be able to handle
 more load in our production application.
@@ -53,14 +53,21 @@ inventory-2-fw9d9   2/2       Running   0          10m
 inventory-2-p9c7h   2/2       Running   0          13s
 ~~~
 
+You can see that also in the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}/console/project/prod{{PROJECT_SUFFIX}}){:target="_blank"} in the **CoolStore PROD** project.
+
+![Inventory Scaled]({% image_path fault-tolerance-inventory-scaled.png %}){:width="900px"}
+
 Now, let's make one of the pods misbehave (return `HTTP 503` errors when accessed). We'll use
-a special internal endpoint on the running pod to inject this fault.
+a special internal endpoint on the running pod which we have already created for this lab in order 
+to inject this fault. 
+
+Run the following in the Eclipse Che **Terminal** window:
 
 ~~~sh
 oc rsh -c inventory $(oc get pods -l app=inventory -o name | head -1) curl http://localhost:8080/misbehave
 ~~~
 
-At this point, you'll have two `inventory` pods, only one of which works. We should see this when
+At this point, you'll still have two `inventory` pods however only one of them works. We should see this when
 we access the `inventory` service.
 
 ### Observe Behavior
@@ -69,14 +76,16 @@ At this point, due to the default load balancer, half of all access to the inven
 pod and half to the broken pod. Let's access the `catalog` service directly (which in turn calls the `inventory` service). We
 will use the `siege` command line utility to repeatedly call the service. Half of the accesses should fail (thanks to the misbehaving pod):
 
-~~~sh
+Run the following in the Eclipse Che **Terminal** window:
+
+~~~shell
 siege -c 1 -r 10 http://catalog-prod.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
 You should see output similar to this (you'll see the `HTTP/1.1 500` for the failed invocations of the `catalog` service
 and you'll see `Availability: 50.00%` and 5 successful transactions and 5 failed, indicating half the accesses failed):
 
-~~~
+~~~shell
 ** SIEGE 4.0.2
 ** Preparing 1 concurrent users for battle.
 The server is now under siege...
@@ -179,7 +188,7 @@ spec:
 EOF
 ~~~
 
-### Test behavior with failing instance
+### Test Behavior with Failing Instances
 
 Repeat the test from above:
 
@@ -248,7 +257,7 @@ ejections_total: 14
 You can see that Envoy is reporting `ejections_active: 1` (and if you run the test enough, the value
 of `ejections_total` and other values will go up as Envoy is tracking the # of total lifetime failures).
 
-### Ultimate resilience with retries, circuit breaker, and pool ejection
+### Ultimate Resilience with Retries, Circuit Breaker, and Pool Ejection
 
 Even with pool ejection your application doesn’t look that resilient. That’s
 because we’re still letting some errors (`quantity = -1`) to be propagated to our clients. But we can

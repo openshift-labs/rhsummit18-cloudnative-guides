@@ -38,16 +38,20 @@ letting Istio handle failures at a lower, application infrastructure level.
 In the **CoolStore PROD** project, let's scale up the `inventory` service to 2 pods since we want to be able to handle
 more load in our production application.
 
-~~~sh
+~~~shell
 oc project prod{{PROJECT_SUFFIX}}
 oc scale dc/inventory --replicas=2
 ~~~
 
 Wait for both pods to be in the `2/2 Ready` state:
 
-~~~
+~~~shell
 oc get pods -l app=inventory
+~~~
 
+You will see something like the following which shows 2 inventory pods are running.
+
+~~~shell
 NAME                READY     STATUS    RESTARTS   AGE
 inventory-2-fw9d9   2/2       Running   0          10m
 inventory-2-p9c7h   2/2       Running   0          13s
@@ -226,6 +230,8 @@ Failed transactions:	           1
 Longest transaction:	        0.05
 Shortest transaction:	        0.01
 ~~~
+
+If you don't, run it a few more times till the rules take effect.
 
 You will notice that there is still 1 failure in the above output (the first or second one). This is because
 the misbehaving pod is accessed once, fails, and is immediately ejected from the load balancing

@@ -123,7 +123,7 @@ test class:
 
 You will get an error notice near the annotation which tells you the annotation should be imported in order to be used in 
 your Java class. Fortunately Eclipse Che can fix that for you automatically. Right-click on the annotation (or the error) and 
-then choose **Quick Fix**. Eclipse Che will show you a list of quick fixes, click on **Import 'Repository'...** to import it to your 
+then choose **Quick Fix**. Eclipse Che will show you a list of quick fixes, click on **Import 'RunWith'...** to import it to your 
 Java class. 
 
 The above annotations set up the correct Spring context and make required objects available for injection 
@@ -136,8 +136,8 @@ Inject an instance of `ProductRepository` which is the class under test:
     ProductRepository repository;
 ~~~
 
-Now you are ready to write the first test. First you can test the `findById` method by collecting one of 
-the product that you defined in `schema.sql` and verify that the data is correct:
+Now you are ready to write the first test. First you can test the `findOne` method by collecting one of 
+the product that you defined in `import.sql` and verify that the data is correct:
 
 ~~~java
     @Test
@@ -170,11 +170,12 @@ so add the static import for `assertThat` method like this to the top of the tes
 import static org.assertj.core.api.Assertions.assertThat;
 ~~~
 
-Build the project to make sure everything is in order by click on **Run** > **Commands Palette** > **Build**.
+Build the project to make sure everything is in order by click on **Run** > **Commands Palette** > **build**.
 
 Now, go ahead and run the unit test by right-clicking on the the `ProductRepositoryTest` class file 
-in the project explorer and then select **Run Test > Run JUnit Test**. Check that the test are passing 
-either from the out put or by  and make sure that the unit tests are passing.
+in the project explorer and then select **Run Test > Run JUnit Test**. 
+
+Verify that the tests are passing green.
 
 |**STEP BY STEP:** Create a Unit test for the Repository
 |![Create a repository]({% image_path create-service-step-by-step-run-test.gif %}){:width="640px"}
@@ -222,7 +223,7 @@ Then you need to expose the endpoint that list all products via the `/services/p
     }
 ~~~
 
-And finally create the endpoint to find a particular product, by providing the `itemId` as part of the path like this:
+And finally create the endpoint to find a particular product, by providing the item it as part of the path like this:
 
 ~~~java
     @ResponseBody
@@ -270,6 +271,8 @@ to test your own code changes before committing and pushing it to a shared repos
 
 |**NOTE:** The current version of the application does not provide a inventory quantity number. We will look at that in the next section.
 
+Stop the local test run of Catalog by clicking on the stop icon near **run** in Eclipse Che.
+
 ### Push the Changes to Git Repository
 
 Commit all the changes and push all the changes by selecting **Git > Commit** from the menu.
@@ -280,8 +283,7 @@ Select all the changed or new files and check the box next to **Push committed c
 
 ![Git Commit]({% image_path create-catalog-commit-2.png %}){:width="600px"}
 
-Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"} and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the Catalog code:
-({{OPENSHIFT_MASTER_URL}}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"}
+Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}/console/project/dev{{PROJECT_SUFFIX}}/browse/pipelines){:target="_blank"} and click on **Builds** > **Pipelines**: to watch the pipeline build and deploy the Catalog code.
 
 ![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
 
@@ -292,7 +294,7 @@ Note that you can find the Catalog url also in the project overview in the OpenS
 |**STEP BY STEP:** Commit the changes and run the pipeline
 |![Step by step - Commit the changes and run the pipeline]({% image_path create-catalog-step-by-step-pipeline.gif %}){:width="640px"}
 
-|**NOTE:** The current version of the application does not make use of the PostgreSQL server. Instead it currently uses the H2 database. We will come back to that when we look at module `Externalize Configuration`
+|**NOTE:** The current version of the application does not make use of the PostgreSQL server which is deployed in the **Catalog DEV** project. Instead it currently uses the H2 database. You will fix that in the next lab.
 
 ### Summary
 

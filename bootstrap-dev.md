@@ -64,6 +64,13 @@ click on **Run** > **Commands Palette** > **Build** (there are more ways to do t
 
 ![Eclipse Che - Project]({% image_path bootstrap-che-build-palette.png %}){:width="600px"}
 
+The build will succeed and you would see something like the following in the build logs.
+
+~~~shell
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+~~~
 
 #### Create Dev Environment
 
@@ -78,10 +85,7 @@ Login with the following credentials:
 You can also use the Eclipse Che **Terminal** panel to run OpenShift CLI commands that is what you will
 use in the following labs whenever it's instructed to run an OpenShift CLI command.
 
-Use the OpenShift CLI to login into OpenShift with the following credentials:
-
-* Username: ``{{ OPENSHIFT_USERNAME }}``
-* Password: ``{{ OPENSHIFT_PASSWORD }}``
+Use the OpenShift CLI to login into OpenShift with the the same credentials:
 
 ~~~shell
 oc login {{ OPENSHIFT_MASTER_URL }}
@@ -120,6 +124,10 @@ image for the application by layering the application binaries on the `[BASE IMA
 is based on Spring Boot, we use the certified OpenJDK image that is available in OpenShift 
 a.k.a. `redhat-openjdk18-openshift:1.2`.
 
+We also have specified the environment variable `MAVEN_MIRROR_URL` supported by the OpenJDK image which 
+tells the builder to use that specific Maven repository manager for pulling all the artifacts. You can read 
+more about the configuration environment variables that the OpenJDK image supports [in its documentation](https://access.redhat.com/documentation/en-us/red_hat_jboss_middleware_for_openshift/3/html/red_hat_java_s2i_for_openshift/reference#configuration_environment_variables){:target="_blank"}
+
 In the [`dev` project console]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"}, Go to **Builds** > **Builds** to see the Catalog image build running. You can also see the build logs by
 clicking on the build.
 
@@ -149,11 +157,12 @@ that you deployed are up and ready.
 
 ![Catalog Service]({% image_path bootstrap-catalog-overview.png %}){:width="900px"}
 
-The Catalog service currently doesn't have much code in it except an example endpoint. [Try
-the endpoint in your browser](http://catalog-dev{{ PROJECT_SUFFIX }}.{{ APPS_HOSTNAME_SUFFIX }}/hello){:target="_blank"} to make sure it is deployed correctly.
+The Catalog service currently doesn't have much code in it except an example endpoint at `/hello`. [Try
+the `/hello` endpoint in your browser](http://catalog-dev{{ PROJECT_SUFFIX }}.{{ APPS_HOSTNAME_SUFFIX }}/hello){:target="_blank"} to make sure it is deployed correctly.
 
-If you see a `Hello, World!` response back in your browser, then it's working. If you don't see `Hello, World!` the application may not be fully started
-yet. You can run `oc rollout status -w dc/catalog` in your Terminal to wait for it to be ready, then try the URL again.
+If you see a `Hello, World!` response back in your browser, then it's working. If you don't see it, the application may 
+not be fully started yet. You can run `oc rollout status -w dc/catalog` in your **Terminal** to 
+wait for it to be ready, then try the URL again.
 
 In the next labs, you will write some code to build a few REST endpoints in the Catalog service.
 
@@ -233,6 +242,13 @@ pipeline {
 }
 ~~~
 
+The above pipeline defines a number of stages to build and deploy the Catalog service code in the 
+development environment:
+
+* _Verify_: run the tests and verify the code works
+* _Build JAR_: build the Catalog service JAR file
+* _Build Image_: build a container image using the Catalog service JAR file
+* _Deploy_: deploy the new Catalog container image into **Catalog DEV** environment
 
 Commit the `Jenkinsfile` in to the git repository by right-clicking on the catalog in the project 
 explorer and then on **Git** > **Commit**.
@@ -251,9 +267,10 @@ oc new-app jenkins-persistent
 
 ![Deploy Jenkins]({% image_path bootstrap-jenkins-deploy.png %}){:width="900px"}
 
-Since the pipeline will control the build and deployment flow, you should disable 
-[the automatic deployment triggers]({{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers){:target="_blank"}
-that OpenShift uses to automate the deployment process:
+OpenShift has built-in support for built and deployment automation through 
+[the automatic deployment triggers]({{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers){:target="_blank"}. Whenever configuration of the image changes or a new image is available for the 
+application, then OpenShift would automatically redeploy the image. Since in this lab you want to 
+control the build and deployment flow via a deployment pipeline, disable the automatic trigger:
 
 ~~~shell
 oc set triggers dc/catalog --manual -n dev{{PROJECT_SUFFIX}}
@@ -288,7 +305,15 @@ spec:
 
 ![Import YAML/JSON - Create Pipeline]({% image_path bootstrap-create-pipeline.png %}){:width="700px"}
 
-Click on **Create**. Try the pipeline!
+Click on **Create**. 
+
+An OpenShift pipeline is created for you which uses the `Jenkinsfile` from the catalog git repository. From 
+the left-side menu go to to **Builds** > **Pipelines**. Click on **Start Pipeline** to try out the 
+build pipeline.
+
+
+![Build Pipeline]({% image_path bootstrap-build-pipeline.png %}){:width="900px"}
+
 
 #### Build and Test on Every Code Change
 
@@ -300,8 +325,7 @@ In order to automate triggering the pipeline, you can define a
 [webhook](https://developer.github.com/webhooks/){:target="_blank"} on your Git repository to 
 notify OpenShift on every commit that is made to the Git repository and trigger a pipeline execution.
 
-In the OpenShift Web Console go to **Builds** > **Pipelines** and then click on the `catalog-build` pipeline. 
-On the **Configurations** tab copy the **Generic Webhook URL**:
+On the **catalog-build** pipeline click on the **Configurations** tab and copy the **Generic Webhook URL**.
 
 ![Pipeline Webhook]({% image_path bootstrap-pipeline-webhook.png %}){:width="900px"}
 
@@ -311,7 +335,7 @@ Now go to the [Git server web console](http://{{GIT_HOSTNAME}}){:target="_blank"
 * Git Username: `{{GIT_USERNAME}}`
 * Git Password: `{{GIT_PASSWORD}}`
 
-Click on the `catalog` repository and then on **Settings**
+Click on the **catalog** repository and then on **Settings**
 
 ![Git Repository Settings]({% image_path bootstrap-gogs-settings.png %}){:width="900px"}
 
@@ -320,7 +344,7 @@ you copied into the **Payload URL** textbox and then click on **Add Webhook**.
 
 ![Add Webhook]({% image_path bootstrap-webhook.png %}){:width="600px"}
 
-The webhook is added now and will trigger the pipeline to run on every push to the `catalog` git 
+The webhook is added now and will trigger the pipeline to run on every push to the **catalog** git 
 repository.
 
 You can test the webhook by clicking on the webhook and then on **Test Delivery** button.

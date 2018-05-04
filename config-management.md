@@ -91,7 +91,7 @@ by default are not allowed to snoop around OpenShift clusters and discover objec
 and discovery is a privilege that needs to be granted to containers in each project.
 
 Since you do want Spring Boot to discover the ConfigMaps inside the **dev** project, you
-need to grant permission to the Spring Boot service account to access the OpenShift REST API and find the
+need to grant permission to the Spring Boot [service account]({{OPENSHIFT_DOCS_BASE}}/dev_guide/service_accounts.html){:target="_blank"} to access the OpenShift REST API and find the
 ConfigMaps. To grant this permission, run the following in Eclipse Che **Terminal**:
 
 ~~~bash
@@ -127,22 +127,18 @@ If your test fails go back and check previous steps before moving to the next se
 
 ### Push Code Changes to Git Repository
 
-Commit the `pom.xml` changes to code repository:
-
-* In the project explorer, right click on catalog and then Git > Commit
-* Make sure `pom.xml` is checked
-* Add a commit message `externalized database configuration`
-* Check the **Push commit changes to...**
-* Click on **Commit**
+Commit the changes to the git repository. In the project explorer, right click on catalog and 
+then **Git > Commit**. Make sure `pom.xml` is checked. Add a commit message and check 
+the **Push commit changes to...** and then click on **Commit**
 
 This will trigger the pipeline build.
 
 Open the [OpenShift Web Console]({{OPENSHIFT_MASTER_URL}}){:target="_blank"} and click on **Builds** > **Pipelines** to watch the pipeline build and deploy the updated catalog code:
 
-![Build Pipeline]({% image_path create-catalog-pipeline.png %}){:width="700px"}
+![Build Pipeline]({% image_path config-catalog-pipeline.png %}){:width="700px"}
 
 |**NOTE:** If your pipeline is not triggered, you may have forgotten to *Push* the changes after commit. In that case, 
-simply use the **Git -> Remotes -> Push...** menu to push the committed changes.
+simply use the **Git > Remotes > Push...** menu to push the committed changes.
 
 Wait for it to complete. At this point the application
 should fetch the configuration and start using PostgreSQL instead of H2.
@@ -154,22 +150,22 @@ running the `psql` utility command from within the PostgreSQL container to verif
 
 ~~~sh
 oc rsh dc/catalog-postgresql /bin/bash -c \
-  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"select itemId, name, price from catalog\""
+  "psql -U \$POSTGRESQL_USER -d \$POSTGRESQL_DATABASE -c \"select item_id, name, price from product\""
 ~~~
 
 You should see the seed data gets listed.
 
 ~~~
- itemid |          name          | price
---------+------------------------+-------
- 329299 | Red Fedora             | 34.99
- 329199 | Forge Laptop Sticker   |   8.5
- 165613 | Solid Performance Polo |  17.8
- 165614 | Ogio Caliber Polo      | 28.75
- 165954 | 16 oz. Vortex Tumbler  |     6
- 444434 | Pebble Smart Watch     |    24
- 444435 | Oculus Rift            |   106
- 444436 | Lytro Camera           |  44.3
+ item_id |          name          | price
+---------+------------------------+-------
+ 329299  | Red Fedora             | 34.99
+ 329199  | Forge Laptop Sticker   |   8.5
+ 165613  | Solid Performance Polo |  17.8
+ 165614  | Ogio Caliber Polo      | 28.75
+ 165954  | 16 oz. Vortex Tumbler  |     6
+ 444434  | Pebble Smart Watch     |    24
+ 444435  | Oculus Rift            |   106
+ 444436  | Lytro Camera           |  44.3
 (8 rows)
 ~~~
 

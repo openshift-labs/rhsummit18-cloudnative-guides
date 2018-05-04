@@ -46,8 +46,7 @@ your name and email and click on **Save**
 The source code for the Catalog service is available in the git server running on OpenShift. In the project 
 explorer pane, click on **Import Projects...** link and enter the Catalog git repository url:
 
-http://{{GIT_USERNAME}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git
-
+|`http://{{GIT_USERNAME}}:{{GIT_PASSWORD}}@{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog.git`{: style="color: blue"}
 
 ![Eclipse Che - Import Project]({% image_path bootstrap-che-import.png %}){:width="720px"}
 

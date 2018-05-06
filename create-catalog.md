@@ -5,6 +5,10 @@ read from the product catalog database.
 
 The catalog service is part of a microservices-based application called **CoolStore**.
 
+![CoolStore Microservices Architecture]({% image_path coolstore-arch.png %}){:width="400px"}
+
+<br/>
+
 ![CoolStore Microservices]({% image_path create-catalog-coolstore.png %}){:width="900px"}
 
 After talking to the **web** team you have decided to create two endpoints: One that returns a list of all products as a JSON

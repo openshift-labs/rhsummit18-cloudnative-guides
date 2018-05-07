@@ -83,5 +83,9 @@
   ignore_errors: true
 
 - name: annotate deployment configs in prod for auto-inject
-  shell: "{{ openshift_cli }} annotate --overwrite dc --all 'sidecar.istio.io/inject'='true' -n prod{{ project_suffix }}"
+  shell: |
+    {{ openshift_cli }} patch dc catalog            -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod{{ project_suffix }}
+    {{ openshift_cli }} patch dc catalog-postgresql -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod{{ project_suffix }}
+    {{ openshift_cli }} patch dc inventory          -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod{{ project_suffix }}
+    {{ openshift_cli }} patch dc web-ui             -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod{{ project_suffix }}
   ignore_errors: true

@@ -175,7 +175,8 @@ Add another test for the `findAll` method:
 ~~~
 
 At this point you should have a lot of errors because you might not have imported any classes.  Click on 
-**Assistant > Organize Imports** in the top bar menu. _Organize imports_ will not import static methods
+**Assistant > Organize Imports** in the top bar menu. Review the list of suggested imports (be sure that
+Eclipse Che imports `java.util.List` and not a different `List` implementation, and click **Finish** if prompted.) _Organize imports_ will not import static methods
 so add the static import for `assertThat` method to the top of the test class near the other imports:
 
 ~~~java
@@ -245,6 +246,8 @@ And finally create the endpoint to find a particular product, by providing the i
         return new ResponseEntity<Product>(product,HttpStatus.OK);
     }
 ~~~
+
+Don't forget to **Assistant > Organize Imports** to import the necessary classes after adding the above code!
 
 |**STEP BY STEP:** Create a REST endpoint for Catalog service 
 |![Step by step - create product endpoint]({% image_path create-catalog-step-by-step-product-endpoint.gif %}){:width="900px"}

@@ -28,7 +28,7 @@ status=200 size=2147 time=3.238312
 Where, the `time=` value says how long in seconds it took to do the call.
 
 Since our production environment uses a distributed tracing tool called [Jaeger](https://www.jaegertracing.io){:target="_blank"}. We can investigate further
-why our catalog service is taking so long to respond. Open the [Jaeger Query Console](http://jaeger-query-istio-system.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"}
+why our catalog service is taking so long to respond. Open the [Jaeger Query Console](https://jaeger-query-istio-system.{{APPS_HOSTNAME_SUFFIX}}){:target="_blank"}
 and specify the following query:
 
 |Property|Value|
@@ -131,8 +131,22 @@ We are now ready to run the tests and verify that our application passes the uni
 [INFO] ------------------------------------------------------------------------
 ~~~
 
-If it for some reason your tests fail, please go back and check the changes that you have done. Otherwise, go ahead and commit and push your changes to the
-git repository.
+If it for some reason your tests fail, please go back and check the changes that you have done.
+
+### Merge the changes
+
+In the previous lab, the `catalog-release` pipeline added new commits to our repository when releasing the first version
+to production. In the [list of commits in Gogs](http://{{GIT_HOSTNAME}}/{{GIT_USERNAME}}/catalog/commits/master){:target="_blank"}
+you can see the following commits:
+
+![Releae commits]({% image_path tracing-merge-code.png %}){:width="600px"}
+
+Before you can merge your new changes for the improved catalog, you'll need to pull these commits into your local repository.
+Use **Git > Remotes... > Pull**, accept the defaults shown below, and click **Pull** to bring these changes into your repository.
+
+![Pull]({% image_path tracing-pull.png %}){:width="600px"}
+
+Now you are ready to merge your code! Go ahead and commit and push your changes to the git repository as before:
 
 ![Git Commit]({% image_path tracing-inventory-commit.png %}){:width="600px"}
 
@@ -147,7 +161,7 @@ then verify that our changes work in the **Catalog DEV** project:
 curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-dev{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
-It should take ~400-500ms.
+It should take ~100-200ms, since the `dev` version of the `inventory` service has a default delay of `100ms`.
 
 After that go to **Builds** > **Pipelines** from the left-side menu of the
 [`dev` project console]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"} and start the **catalog-release** pipeline
@@ -163,7 +177,7 @@ When the **catalog-release** pipeline is done, execute the following command in 
 curl -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" -so /dev/null http://catalog-prod{{PROJECT_SUFFIX}}.{{APPS_HOSTNAME_SUFFIX}}/services/products
 ~~~
 
-Check that the response time is now ~400-500ms.
+Check that the response time is now ~400-500ms (since the `inventory` service in the `prod` environment has our artificial delay of `400ms`.)
 
 |**NOTE:** The first call after the deployment may take a bit longer as things get warmed up
 

@@ -99,7 +99,7 @@ Create a project for the Dev environment:
 oc new-project dev{{PROJECT_SUFFIX}} --display-name="Catalog DEV"
 ~~~
 
-Now that the project is created, you can navigate to it using the OpenShift Web Console by clicking on the name on the left
+Now that the project is created, you can navigate to it using the OpenShift Web Console by clicking on the name on the right
 side of the web console (you may need to click **View All** if the **Catalog DEV** project isn't listed). You can also directly
 access it [here]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{{PROJECT_SUFFIX}}){:target="_blank"}. It's currently empty, but that's about to change.
 
@@ -169,7 +169,7 @@ In the next labs, you will write some code to build a few REST endpoints in the 
 #### Continuous Integration Pipeline
 
 In order to automate the build and test process every time someone changes the source code of the Catalog
-service, create a CI pipeline on Jenkins which checks the code on every commit and builds and tests it. 
+service, you will create a CI pipeline on Jenkins which checks the code on every commit and builds and tests it. 
 The CI pipeline enables fast feedback to developers and makes sure everyone knows and can react if someone 
 breaks the code.
 
@@ -254,7 +254,7 @@ Commit the `Jenkinsfile` into the git repository by right-clicking on the catalo
 explorer and then on **Git** > **Commit**.
 
 Make sure `Jenkinsfile` is checked. Enter a commit message to describe your change. Check the 
-**Push commit changes to...** to push the commit directly to the git server and then click on **Commit***
+**Push commit changes to...** to push the commit directly to the git server and then click on **Commit**.
 
 ![Eclipse Che - Git Commit]({% image_path bootstrap-che-git-commit.png %}){:width="600px"}
 
@@ -349,6 +349,8 @@ The webhook is now added and will trigger the pipeline to run on every push to t
 repository.
 
 You can test the webhook by clicking on the webhook and then on **Test Delivery** button.
+
+|**NOTE**: If your previous pipeline hasn't finished yet, then this one will queue up behind it and execute once the first pipeline build completes.
 
 ![Webhook Test Delivery]({% image_path bootstrap-webhook-testdelivery.png %}){:width="600px"}
 

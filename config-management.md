@@ -78,7 +78,7 @@ project. Using this dependency, Spring Boot will search for a ConfigMap (by defa
 the application) to use as the source of application configuration during application bootstrapping and
 if enabled, triggers hot reloading of beans or Spring context when changes are detected on the ConfigMap.
 Add the following dependency to your `pom.xml` beneath the existing
-dependencies (look for the `<!-- add additional dependencies -->` comment):
+dependencies (look for the `<!-- add kubernetes-config dependencies here -->` comment around line 207):
 
 ~~~xml
 <dependency>
@@ -138,8 +138,7 @@ Open the [`dev` project console]({{ OPENSHIFT_MASTER_URL }}/console/project/dev{
 
 ![Build Pipeline]({% image_path config-catalog-pipeline.png %}){:width="700px"}
 
-|**NOTE:** If your pipeline is not triggered, you may have forgotten to *Push* the changes after commit. In that case, 
-simply use the **Git > Remotes > Push...** menu to push the committed changes.
+|**NOTE:** If your pipeline is not triggered, you may have forgotten to *Push* the changes after commit. In that case, simply use the **Git > Remotes > Push...** menu to push the committed changes.
 
 Wait for it to complete. At this point the application
 should fetch the configuration and start using PostgreSQL instead of H2.

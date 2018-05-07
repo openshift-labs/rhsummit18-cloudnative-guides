@@ -336,3 +336,6 @@ In this section you made your microservices more resilient and able to gracefull
 handle high workloads without a loss in quality. This is important in any cloud native
 application architecture due to the variable nature of cloud environments and
 unpredictable nature of client and end users.
+
+You have completed this lab, pat yourself on the back and reflect on the experience today and how you can use
+these techniques and tools in your own projects!

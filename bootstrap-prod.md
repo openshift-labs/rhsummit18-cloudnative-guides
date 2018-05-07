@@ -166,7 +166,7 @@ oc label secret git-credentials credential.sync.jenkins.openshift.io=true
 ~~~
 
 That's it! Now this secret will be automatically available in Jenkins as a credential. If you look closely in 
-the `Jenkins.release` pipeline, you will notice that you have already included the `withCredentials(){}` expression 
+the `Jenkinsfile.release` pipeline, you will notice that you have already included the `withCredentials(){}` expression 
 to use the Jenkins credentials for authentication against the Catalog git repository.
 
 ~~~shell

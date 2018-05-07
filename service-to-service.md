@@ -213,7 +213,7 @@ a file called `application-default.properties` in `src/test/resources` with the 
 ribbon.listOfServers=mock-service.example.com:8080
 ~~~
 
-|**IMPORTANT:** Notice that this file is located in `src/test/resources` and not `src/main/resources`
+|**IMPORTANT:** Notice that this file is located in `src/test/resources` and not `src/main/resources` and is named `application-default.properties` (double-check the filename - it must be `application-default.properties!)
 
 We are now finally ready to run the test. 
 

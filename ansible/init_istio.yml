@@ -26,7 +26,7 @@
   when: istio_project_result|failed
 
 - name: deploy istio installer job
-  # waiting for a fix for openshift-istio/openshift-ansible#3 bug 
+  # waiting for a fix for openshift-istio/openshift-ansible#4 bug 
   # shell: "{{ openshift_cli }} create -f https://raw.githubusercontent.com/openshift-istio/openshift-ansible/istio-3.9-{{ istio_version }}/istio/istio_installer_job.yaml -n istio-system"
   shell: "{{ openshift_cli }} create -f https://raw.githubusercontent.com/siamaksade/openshift-ansible/istio-3.9-{{ istio_version }}/istio/istio_installer_job.yaml -n istio-system"
   when: istio_project_result|failed
@@ -37,35 +37,6 @@
   until: sidecar_injector_replicas.stdout == "1"
   retries: "30"
   delay: "30"
-
-# download istioctl
-- name: create temporary istio directory
-  tempfile:
-    state: directory
-    prefix: istio
-  register: istio_dir
-
-- name: download istio on linux
-  unarchive:
-    remote_src: yes
-    src: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux.tar.gz"
-    dest: "{{ istio_dir.path }}"
-  when: ansible_distribution != 'MacOSX'
-
-- name: download istio on mac
-  unarchive:
-    remote_src: yes
-    src: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-osx.tar.gz"
-    dest: "{{ istio_dir.path }}"
-  when: ansible_distribution == 'MacOSX'
-
-- name: set istioctl kubeconfig
-  set_fact:
-    istio_options: "--kubeconfig {{ oc_kube_config }}"
-  when: 
-    - oc_kube_config is defined
-    - oc_kube_config is not none
-    - oc_kube_config|trim() != ""
 
 # create prod
 - name: create prod project

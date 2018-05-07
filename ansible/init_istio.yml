@@ -81,3 +81,7 @@
 - name: create istio ingress
   shell: "{{ openshift_cli }} create -f files/ingress.yml -n prod{{ project_suffix }}"
   ignore_errors: true
+
+- name: annotate deployment configs in prod for auto-inject
+  shell: "{{ openshift_cli }} annotate --overwrite dc --all 'sidecar.istio.io/inject'='true' -n prod{{ project_suffix }}"
+  ignore_errors: true

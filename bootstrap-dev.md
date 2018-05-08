@@ -274,7 +274,7 @@ application, then OpenShift would automatically redeploy the image. Since in thi
 control the build and deployment flow via a deployment pipeline, disable the automatic trigger:
 
 ~~~shell
-oc set triggers dc/catalog --manual -n dev{{PROJECT_SUFFIX}}
+oc set triggers dc/catalog --manual
 ~~~
 
 You can now create an OpenShift Pipeline that uses the `Jenkinsfile` definition from the git repository 

@@ -36,7 +36,7 @@
       register: result
       until: result|failed
       retries: 30
-      delay: 30
+      delay: 60
 
     - name: wait for istio-system project to get removed
       shell: "{{ openshift_cli }} get project istio-system"
@@ -44,7 +44,7 @@
       register: result
       until: result|failed
       retries: 30
-      delay: 30
+      delay: 60
 
     - name: wait for prod project to get removed
       shell: "{{ openshift_cli }} get project prod{{ project_suffix }}"
@@ -52,7 +52,7 @@
       register: result
       until: result|failed
       retries: 30
-      delay: 30
+      delay: 60
 
     - name: create lab infra project
       shell: "{{ openshift_cli }} new-project {{ lab_infra_project }}"

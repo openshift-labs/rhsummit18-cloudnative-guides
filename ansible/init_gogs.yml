@@ -9,6 +9,8 @@
     gogs_admin_password: "{{ user_gogs_password }}"
     gogs_user: "{{ user_gogs_user }}"
     gogs_password: "{{ user_gogs_password }}"
+    gogs_deploy_retry_delay: 60
+    gogs_deploy_retry_count: 30
     clean_deploy: true
 
 - name: wait for gogs to be running
@@ -18,7 +20,7 @@
   register: result
   until: result.status == 200
   retries: "30"
-  delay: "10"
+  delay: "60"
 
 - name: check if catalog git repository exists
   uri:

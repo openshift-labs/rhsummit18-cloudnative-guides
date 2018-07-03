@@ -36,7 +36,7 @@
   register: sidecar_injector_replicas
   until: sidecar_injector_replicas.stdout == "1"
   retries: "30"
-  delay: "30"
+  delay: "60"
 
 # create prod
 - name: create prod project

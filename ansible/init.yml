@@ -24,6 +24,12 @@
         gogs_hostname: gogs-{{ lab_infra_project }}.{{ apps_hostname_suffix }}
       tags: always
 
+    - debug:
+        var: apps_hostname_suffix
+
+    - debug:
+        var: gogs_hostname
+
     - name: clean up lab environment
       shell: "{{ openshift_cli }} delete project {{ lab_infra_project }} istio-system prod{{ project_suffix }}"
       when: clean_init|bool

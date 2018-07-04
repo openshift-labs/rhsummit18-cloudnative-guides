@@ -60,6 +60,10 @@
       retries: 30
       delay: 60
 
+    # deploy istio and prod
+    - include_tasks: init_istio.yml
+      tags: istio
+
     - name: create lab infra project
       shell: "{{ openshift_cli }} new-project {{ lab_infra_project }}"
       ignore_errors: true
@@ -124,10 +128,6 @@
         body_format: json
         status_code: 200,201
       tags: eclipse-che
-
-    # deploy istio and prod
-    - include_tasks: init_istio.yml
-      tags: istio
 
     # validate cluster
     - name: check openjdk image stream installed

@@ -1,0 +1,23 @@
+- name: cloudnative-workshop-apb playbook to deprovision the application
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars:
+    openshift_user: 
+    openshift_password: 
+    openshift_token:
+
+  roles:
+  - role: ansible.kubernetes-modules
+    install_python_requirements: no
+  - role: ansibleplaybookbundle.asb-modules
+  - role: common
+
+  tasks:    
+  - name: Delete infrastructure services from {{ namespace }}
+    command: "oc delete all,cm,secret,pvc,sa -l app={{ item }} -n {{ namespace }}"
+    with_items:
+      - che
+      - gogs
+      - nexus
+      - guides

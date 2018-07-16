@@ -1,0 +1,5 @@
+---
+github_account: openshift-labs
+github_account: master
+
+templates_base_url: https://raw.githubusercontent.com/{{ github_account }}/rhsummit18-cloudnative-labs/{{ github_ref }}/openshift

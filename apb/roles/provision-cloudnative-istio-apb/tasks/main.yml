@@ -1,0 +1,74 @@
+# create eclipse che stack
+- include_tasks: add-che-stack.yml
+
+# install openjdk imagestream
+- name: install openjdk image stream
+  shell: "oc apply -n openshift -f https://raw.githubusercontent.com/jboss-openshift/application-templates/master/openjdk/openjdk18-image-stream.json"
+
+# install inventory template
+- name: install the inventory template
+  shell: "oc apply -n openshift -f {{ templates_base_url }}/inventory-dev-template.yml"
+
+# prepare git repositories
+- name: wait for gogs to be running
+  uri:
+    url: http://gogs-{{ namespace }}.{{ apps_hostname_suffix }}
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: "30"
+  delay: "60"
+
+- name: create temporary git directory
+  tempfile:
+    state: directory
+    prefix: projects-git
+  register: git_dir
+
+- name: unarchive projects source archive
+  unarchive:
+    remote_src: yes
+    src: "https://github.com/{{ github_account }}/rhsummit18-cloudnative-labs/archive/{{ github_ref }}.tar.gz"
+    dest: "{{ git_dir.path }}"
+
+- name: prepare git repository working copy
+  shell: |
+    git init
+    git add . --all
+    git config user.email "rhdeveloper@redhat.com"
+    git config user.name "rh-developer"
+    git commit -m "Initial add"
+  args:
+    chdir: "{{ git_dir.path }}/rhsummit18-cloudnative-labs-{{ github_ref }}/catalog"
+
+# pre-populate nexus
+- name: create catalog image stream
+  openshift_v1_image_stream:
+    name: catalog
+    namespace: "{{ namespace }}"
+    state: present
+
+- name: create catalog build
+  openshift_v1_build_config:
+    state: present
+    name: catalog
+    namespace: "{{ namespace }}"
+    output_to_kind: ImageStreamTag
+    output_to_name: catalog:latest
+    source_git_uri: "https://github.com/{{ github_account }}/rhsummit18-cloudnative-labs.git"
+    spec_source_git_ref: "{{github_ref}}"
+    source_type: Git
+    strategy_type: Source
+    strategy_source_strategy_from_kind: ImageStreamTag
+    strategy_source_strategy_from_name: redhat-openjdk18-openshift:1.4
+    strategy_source_strategy_from_namespace: openshift
+    spec_strategy_source_strategy_env:
+      - name: MAVEN_MIRROR_URL
+        value: http://nexus.{{ namespace }}.svc:8081/repository/maven-all-public/
+
+- name: run catalog build to populate nexus
+  shell: "oc start-build catalog -n {{ namespace }}"
+
+# prepare user resources
+- include_tasks: prep-user.yml
+  with_sequence: start=1 end={{ user_count }} format={{ user_format }}

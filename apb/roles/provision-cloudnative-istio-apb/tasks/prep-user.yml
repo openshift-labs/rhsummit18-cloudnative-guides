@@ -1,0 +1,97 @@
+---
+- set_fact:
+    current_user: "{{ item }}"
+
+- name: check if catalog git repository exists
+  uri:
+    url: http://gogs-{{ namespace }}.{{ apps_hostname_suffix }}/api/v1/repos/{{ current_user }}/catalog
+    user: "{{ current_user }}"
+    password: "{{ user_password }}"
+    force_basic_auth: true
+    status_code: 200,404
+  register: repo_result
+
+- name: create catalog git repository
+  uri:
+    url: http://gogs-{{ namespace }}.{{ apps_hostname_suffix }}/api/v1/user/repos
+    method: POST
+    body: '{"name": "catalog", "private": false}'
+    body_format: json
+    user: "{{ current_user }}"
+    password: "{{ user_password }}"
+    status_code: 200,201
+    force_basic_auth: true
+  when: repo_result.status != 200
+
+- name: push catalog to git repository in Gogs
+  shell: |
+    git push http://{{ current_user }}:{{ user_password }}@gogs-{{ namespace }}.{{ apps_hostname_suffix }}/{{ current_user }}/catalog.git master
+  args:
+    chdir: "{{ git_dir.path }}/rhsummit18-cloudnative-labs-{{ github_ref }}/catalog"
+  when: repo_result.status != 200
+
+# create prod
+- name: create prod project
+  shell: |
+    oc adm new-project prod-{{ current_user }} --display-name='CoolStore PROD' --admin='{{ current_user }}'
+    oc adm policy add-scc-to-user privileged -z default -n prod-{{ current_user }}
+    oc adm policy add-scc-to-user anyuid -z default prod-{{ current_user }}
+    oc adm policy add-role-to-user admin system:serviceaccount:prod-{{ current_user }}:default -n prod-{{ current_user }}
+
+- name: deploy web in prod
+  shell: |
+    oc process -f {{ templates_base_url }}/web-template.yml \
+        --param=IMAGE_VERSION=prod \
+        -n prod-{{ current_user }} | \
+                  oc apply -f - -n prod-{{ current_user }}
+
+- name: deploy inventory in prod
+  shell: |
+    oc process -f {{ templates_base_url }}/inventory-template.yml \
+        --param=IMAGE_VERSION=prod \
+        -n prod-{{ current_user }} | \
+                  oc apply -f - -n prod-{{ current_user }}
+
+- name: deploy catalog in prod
+  shell: |
+    oc process -f {{ templates_base_url }}/catalog-template.yml \
+        --param=IMAGE_VERSION=prod \
+        -n prod-{{ current_user }} | \
+                  oc apply -f - -n prod-{{ current_user }}
+
+- name: add jaeger tracing to the catalog in prod
+  shell: |
+    oc env -n prod-{{ current_user }} dc/catalog JAEGER_SERVICE_NAME=catalog \
+          JAEGER_ENDPOINT=https://jaeger-collector.istio-system.svc:14267/api/traces \
+          JAEGER_PROPAGATION=b3 \
+          JAEGER_SAMPLER_TYPE=const \
+          JAEGER_SAMPLER_PARAM=1
+
+- name: create istio ingress
+  k8s_v1beta1_ingress:
+    state: present
+    name: lab-ingress
+    namespace: prod-{{ current_user }}
+    annotations:
+      kubernetes.io/ingress.class: "istio"
+    spec_backend_service_name: web-ui
+    spec_backend_service_port: http
+    spec_rules:
+    - http:
+        paths:
+        - path: /services/inventory/.*
+          backend:
+            serviceName: inventory
+            servicePort: http
+        - path: /services/products
+          backend:
+            serviceName: catalog
+            servicePort: http
+
+- name: annotate deployment configs in prod for auto-inject
+  shell: |
+    oc patch dc catalog            -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod-{{ current_user }}
+    oc patch dc catalog-postgresql -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod-{{ current_user }}
+    oc patch dc inventory          -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod-{{ current_user }}
+    oc patch dc web-ui             -p '{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}}}' -n prod-{{ current_user }}
+  ignore_errors: true

@@ -20,3 +20,7 @@ logs/
 tmp/
 .vscode
 dependency-reduced-pom.xml
+apb/roles/openshift_gogs
+apb/roles/openshift_workshopper
+apb/roles/openshift_eclipse_che
+apb/roles/openshift_istio

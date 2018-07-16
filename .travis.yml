@@ -12,7 +12,7 @@ before_install:
 install:
   - pip install ansible
   - ansible-galaxy install -r apb/requirements-travis.yml
-  - ansible-playbook apb/playbooks/provision.yml --syntax-check
+  # - ansible-playbook apb/playbooks/provision.yml --syntax-check
 
 script:
   - cd apb && docker build -t openshiftapb/cloudnative-istio-workshop-apb:$TRAVIS_COMMIT .

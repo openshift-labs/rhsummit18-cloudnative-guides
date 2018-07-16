@@ -1,9 +1,6 @@
 # Red Hat Summit 2018: <br/>Getting Started with Cloud-Native Applications Lab Guide [![Build Status](https://travis-ci.org/openshift-labs/rhsummit18-cloudnative-guides.svg?branch=ocp-3.9)](https://travis-ci.org/openshift-labs/rhsummit18-cloudnative-guides)
-===
 
 Lab guides for the Cloud-Native Lab at Red Hat Summit 2018
-
-
 
 Install Workshop Infrastructure
 ===

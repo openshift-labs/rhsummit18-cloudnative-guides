@@ -31,7 +31,9 @@
         var: gogs_hostname
 
     - name: clean up lab environment
-      shell: "{{ openshift_cli }} delete project {{ lab_infra_project }} istio-system prod{{ project_suffix }}"
+      shell: |
+        {{ openshift_cli }} delete project {{ lab_infra_project }} istio-system prod{{ project_suffix }}
+        {{ openshift_cli }} delete MutatingWebhookConfiguration istio-sidecar-injector
       when: clean_init|bool
       ignore_errors: true
       tags: always

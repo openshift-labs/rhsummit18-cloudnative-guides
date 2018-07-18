@@ -1,6 +1,6 @@
 {
-  "name": "Java RH Summit",
-  "description": "Java JDK Stack on CentOS for Red Hat Summit 2018 Labs",
+  "name": "Java with OpenShift CLI",
+  "description": "Java JDK Stack on CentOS for Cloud-Native with Istio Workshop",
   "scope": "general",
   "workspaceConfig": {
     "environments": {
@@ -120,5 +120,5 @@
     "CentOS",
     "Git"
   ],
-  "id": "java-centos-rhsummit18"
+  "id": "java-oc-centos-cloudnative"
 }

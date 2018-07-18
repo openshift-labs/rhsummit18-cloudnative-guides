@@ -1,6 +1,3 @@
-# create eclipse che stack
-- include_tasks: add-che-stack.yml
-
 # install openjdk imagestream
 - name: install openjdk image stream
   shell: "oc apply -n openshift -f https://raw.githubusercontent.com/jboss-openshift/application-templates/master/openjdk/openjdk18-image-stream.json"

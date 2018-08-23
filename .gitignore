@@ -1,4 +1,4 @@
-ansible/roles/*
+ansible/roles/siamaksade*
 ansible/py3-ansible/*
 tmp/*
 *.retry
